@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Personal Space | QR Tool & Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            scroll-behavior: smooth;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #6366f1, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .nav-link:hover {
+            color: #818cf8;
+            transition: 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="fixed w-full z-50 glass px-6 py-4 flex justify-between items-center">
+        <div class="text-2xl font-bold gradient-text">Masud Parvez</div>
+        <div class="hidden md:flex gap-8 font-medium">
+            <a href="#home" class="nav-link">Home</a>
+            <a href="#qr-tool" class="nav-link">QR Generator</a>
+            <a href="#skills" class="nav-link">Skills</a>
+        </div>
+        <button class="bg-indigo-600 px-5 py-2 rounded-full text-sm font-bold hover:bg-indigo-500 transition">Contact Me</button>
+    </nav>
+
+    <section id="home" class="pt-32 pb-20 px-6">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12">
+            <div class="flex-1 text-center md:text-left">
+                <h2 class="text-xl text-indigo-400 font-semibold mb-4">Hello, I'm</h2>
+                <h1 class="text-5xl md:text-7xl font-extrabold mb-6">Masud Parvez</h1>
+                <p class="text-slate-400 text-lg mb-8 max-w-xl">
+                    আমি একজন ওয়েব ডেভেলপার এবং টেক এনথুসিয়াস্ট। আমি সুন্দর এবং কার্যকর ডিজিটাল সলিউশন তৈরি করতে পছন্দ করি। নিচে আমার তৈরি করা কিউআর টুলটি ট্রাই করে দেখুন!
+                </p>
+                <div class="flex gap-4 justify-center md:justify-start">
+                    <a href="#" class="text-2xl hover:text-indigo-400 transition"><i class="fab fa-github"></i></a>
+                    <a href="#" class="text-2xl hover:text-indigo-400 transition"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="text-2xl hover:text-indigo-400 transition"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+            <div class="flex-1 flex justify-center">
+                <div class="relative w-64 h-64 md:w-80 md:h-80">
+                    <div class="absolute inset-0 bg-indigo-500 rounded-full blur-3xl opacity-20 animate-pulse"></div>
+                    <img src="https://scontent.fdac181-1.fna.fbcdn.net/v/t39.30808-6/315626704_1345645906262530_417058639700547989_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=a5f93a&_nc_ohc=WOo0sMOuDGQQ7kNvwG_S0aK&_nc_oc=AdkM__EvtwizdgQZX0Q0rthO9lNhm_tizoCjnMjp5NZ3tNrxM0BS_AJyRMC8VlixQgM&_nc_zt=23&_nc_ht=scontent.fdac181-1.fna&_nc_gid=t4--GDX4qd5r2C2mum_I3A&oh=00_Aftyr18el8wg-GxBCWnlqD_Qp2zYMZeMSiZzM0iO2XN28w&oe=6988D154">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="qr-tool" class="py-20 px-6 bg-slate-900/50">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-2">Advanced QR Generator</h2>
+                <div class="h-1 w-20 bg-indigo-500 mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glass p-8 rounded-3xl">
+                    <label class="block text-sm font-medium mb-3 text-slate-300">Enter Your Content</label>
+                    <textarea id="qr-input" rows="4" placeholder="Type link or text here..." 
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 focus:ring-2 focus:ring-indigo-500 outline-none mb-6"></textarea>
+                    
+                    <button onclick="generateQR()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold transition flex justify-center items-center gap-2">
+                        <i class="fas fa-bolt"></i> Generate QR Code
+                    </button>
+
+                    <div id="preview-area" class="mt-8 hidden flex flex-col items-center animate-fade-in">
+                        <div class="bg-white p-3 rounded-xl">
+                            <img id="qr-image" src="" alt="QR">
+                        </div>
+                        <button id="download-btn" class="mt-4 text-emerald-400 hover:underline flex items-center gap-2">
+                            <i class="fas fa-download"></i> Download Image
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass p-8 rounded-3xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold flex items-center gap-2"><i class="fas fa-clock-rotate-left"></i> History</h3>
+                        <button onclick="clearHistory()" class="text-xs text-red-400">Clear All</button>
+                    </div>
+                    <div id="history-list" class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="skills" class="py-20 px-6">
+        <div class="max-w-5xl mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-12">My Skills</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="glass p-6 rounded-2xl hover:border-indigo-500 transition">
+                    <i class="fab fa-html5 text-4xl text-orange-500 mb-4"></i>
+                    <p class="font-bold">HTML5</p>
+                </div>
+                <div class="glass p-6 rounded-2xl hover:border-indigo-500 transition">
+                    <i class="fab fa-css3-alt text-4xl text-blue-500 mb-4"></i>
+                    <p class="font-bold">Tailwind CSS</p>
+                </div>
+                <div class="glass p-6 rounded-2xl hover:border-indigo-500 transition">
+                    <i class="fab fa-js text-4xl text-yellow-400 mb-4"></i>
+                    <p class="font-bold">JavaScript</p>
+                </div>
+                <div class="glass p-6 rounded-2xl hover:border-indigo-500 transition">
+                    <i class="fas fa-code-branch text-4xl text-emerald-400 mb-4"></i>
+                    <p class="font-bold">Git/GitHub</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-10 text-center border-t border-slate-800">
+        <p class="text-slate-500">© 2026 Masud Parvez Built with ❤️ </p>
+    </footer>
+
+    <script>
+        // QR Logic
+        let history = JSON.parse(localStorage.getItem('my-site-qr-history') || '[]');
+
+        window.onload = renderHistory;
+
+        function generateQR() {
+            const input = document.getElementById('qr-input').value.trim();
+            if(!input) return alert("Please enter text!");
+
+            const url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}`;
+            
+            document.getElementById('qr-image').src = url;
+            document.getElementById('preview-area').classList.remove('hidden');
+            document.getElementById('download-btn').onclick = () => downloadQR(url, input);
+
+            // Update History
+            const entry = { text: input, url: url, time: new Date().toLocaleTimeString() };
+            history.unshift(entry);
+            history = history.slice(0, 5); // Keep last 5
+            localStorage.setItem('my-site-qr-history', JSON.stringify(history));
+            renderHistory();
+        }
+
+        async function downloadQR(url, name) {
+            const res = await fetch(url);
+            const blob = await res.blob();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `QR_${name.substring(0,5)}.png`;
+            a.click();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = history.length ? '' : '<p class="text-slate-600 text-center">No recent activity</p>';
+            history.forEach((item, i) => {
+                list.innerHTML += `
+                    <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                        <span class="truncate text-sm w-32">${item.text}</span>
+                        <div class="flex gap-3">
+                            <button onclick="viewHistory(${i})" class="text-indigo-400"><i class="fas fa-eye"></i></button>
+                            <button onclick="downloadQR('${item.url}', '${item.text}')" class="text-emerald-400"><i class="fas fa-download"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function viewHistory(i) {
+            const item = history[i];
+            document.getElementById('qr-input').value = item.text;
+            generateQR();
+        }
+
+        function clearHistory() {
+            history = [];
+            localStorage.removeItem('my-site-qr-history');
+            renderHistory();
+        }
+    </script>
+</body>
+</html>
