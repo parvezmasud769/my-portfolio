@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High-Resolution Cover Page Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap');
+        
+        body { font-family: 'Times New Roman', serif; }
+
+        #page-preview {
+            width: 210mm;
+            height: 297mm;
+            padding: 15mm 20mm;
+            background: white;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            color: black;
+            box-sizing: border-box;
+            justify-content: flex-start;
+        }
+
+        .logo-section { margin-top: 5mm; margin-bottom: 10mm; }
+        .logo-section img { 
+            width: 35mm; 
+            height: 45mm; 
+            object-fit: contain;
+            image-rendering: -webkit-optimize-contrast; 
+        }
+
+        .uni-section { margin-bottom: 12mm; }
+        .uni-section h1 { font-size: 24pt; font-weight: bold; }
+        .uni-section h2 { font-size: 18pt; font-weight: bold; }
+
+        .assignment-section { margin-bottom: 15mm; }
+        .assignment-section p { font-size: 14pt; font-weight: bold; }
+        .assignment-section h3 { font-size: 20pt; font-weight: bold; font-style: italic; }
+
+        .info-container { 
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10mm;
+            text-align: center;
+        }
+
+        .label-underline { 
+            font-weight: bold; 
+            text-decoration: underline; 
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .name-bold { font-size: 16pt; font-weight: bold; }
+
+        .date-section {
+            margin-top: auto; 
+            margin-bottom: 15mm;
+            font-weight: bold;
+            font-size: 14pt;
+        }
+    </style>
+</head>
+<body class="bg-gray-200 py-10">
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 px-4">
+        <div class="bg-white p-6 rounded-2xl shadow-xl h-fit border border-gray-300">
+            <h2 class="text-xl font-bold mb-4 text-indigo-800 border-b pb-2">Customizer (HD Output)</h2>
+            <div class="space-y-3">
+                <input type="file" id="logo-in" accept="image/*" class="w-full p-2 border rounded">
+                <input type="text" id="uni-in" placeholder="Header University Name" oninput="update()" class="p-2 border rounded w-full">
+                <input type="text" id="dept-in" placeholder="Header Department Name" oninput="update()" class="p-2 border rounded w-full">
+                <input type="text" id="topic-in" placeholder="Assignment Topic" oninput="update()" class="p-2 border rounded w-full">
+                <input type="text" id="course-in" placeholder="Course Code" oninput="update()" class="p-2 border rounded w-full">
+                
+                <div class="grid grid-cols-2 gap-4 pt-4 border-t">
+                    <div class="space-y-2">
+                        <p class="text-[10px] font-bold text-indigo-600">SUBMITTED TO</p>
+                        <input type="text" id="p-name" placeholder="Teacher's Name" oninput="update()" class="p-2 border rounded w-full text-xs">
+                        <input type="text" id="p-desig" placeholder="Designation" oninput="update()" class="p-2 border rounded w-full text-xs">
+                        <input type="text" id="p-dept" placeholder="Department" oninput="update()" class="p-2 border rounded w-full text-xs">
+                        <input type="text" id="p-uni-in" placeholder="University" oninput="update()" class="p-2 border rounded w-full text-xs bg-indigo-50">
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-[10px] font-bold text-indigo-600">SUBMITTED BY</p>
+                        <input type="text" id="s-name" placeholder="Your Name" oninput="update()" class="p-2 border rounded w-full text-xs">
+                        <input type="text" id="s-id" placeholder="ID No" oninput="update()" class="p-2 border rounded w-full text-xs">
+                        <input type="text" id="s-session" placeholder="Session" oninput="update()" class="p-2 border rounded w-full text-xs">
+                        <input type="text" id="s-dept-in" placeholder="Department" oninput="update()" class="p-2 border rounded w-full text-xs">
+                        <input type="text" id="s-uni-in" placeholder="University" oninput="update()" class="p-2 border rounded w-full text-xs bg-indigo-50">
+                    </div>
+                </div>
+                <input type="text" id="date-in" placeholder="Date of submission" oninput="update()" class="p-2 border rounded w-full mt-2">
+            </div>
+            <button onclick="downloadPDF()" class="w-full mt-6 bg-indigo-700 text-white py-4 rounded-xl font-bold hover:bg-indigo-800 shadow-lg transition-transform hover:scale-[1.02]">
+                DOWNLOAD CLEAR PDF
+            </button>
+        </div>
+
+        <div class="bg-white shadow-2xl overflow-hidden border">
+            <div id="page-preview">
+                <div class="logo-section">
+                    <img id="v-logo" src="https://via.placeholder.com/150x180?text=LOGO" alt="Logo">
+                </div>
+                <div class="uni-section">
+                    <h1 id="v-uni">University of Chittagong</h1>
+                    <h2 id="v-dept">Department of Banking & Insurance</h2>
+                </div>
+                <div class="assignment-section">
+                    <p>Assignment on</p>
+                    <h3 id="v-topic">Financial Statement Analysis</h3>
+                    <p id="v-course">Course Code: BI 408</p>
+                </div>
+                <div class="info-container">
+                    <div>
+                        <span class="label-underline">SUBMITTED TO</span>
+                        <p id="v-p-name" class="name-bold">Md. Ali Arshad Chowdhury</p>
+                        <p id="v-p-desig">Professor</p>
+                        <p id="v-p-dept">Department of Accounting</p>
+                        <p id="v-p-uni">University of Chittagong</p>
+                    </div>
+                    <div>
+                        <span class="label-underline">SUBMITTED BY</span>
+                        <p id="v-s-name" class="name-bold">Masud Parvez</p>
+                        <p id="v-s-id">ID: 20306006</p>
+                        <p id="v-s-session">Session: 2019-2020</p>
+                        <p id="v-s-dept">Department of Banking & Insurance</p>
+                        <p id="v-s-uni">University of Chittagong</p>
+                    </div>
+                </div>
+                <div class="date-section">
+                    <p id="v-date">Date of submission: 27th January 2025</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function update() {
+            const getVal = (id) => document.getElementById(id).value;
+            const setView = (id, text) => document.getElementById(id).innerText = text;
+
+            setView('v-uni', getVal('uni-in') || 'University of Chittagong');
+            setView('v-dept', getVal('dept-in') || 'Department of Banking & Insurance');
+            setView('v-topic', getVal('topic-in') || 'Financial Statement Analysis');
+            setView('v-course', 'Course Code: ' + (getVal('course-in') || 'BI 408'));
+            
+            setView('v-p-name', getVal('p-name') || 'Md. Ali Arshad Chowdhury');
+            setView('v-p-desig', getVal('p-desig') || 'Professor');
+            setView('v-p-dept', getVal('p-dept') || 'Department of Accounting');
+            setView('v-p-uni', getVal('p-uni-in') || 'University of Chittagong');
+            
+            setView('v-s-name', getVal('s-name') || 'Masud Parvez');
+            setView('v-s-id', 'ID: ' + (getVal('s-id') || '20306006'));
+            setView('v-s-session', 'Session: ' + (getVal('s-session') || '2019-2020'));
+            setView('v-s-dept', getVal('s-dept-in') || 'Department of Banking & Insurance');
+            setView('v-s-uni', getVal('s-uni-in') || 'University of Chittagong');
+            
+            setView('v-date', 'Date of submission: ' + (getVal('date-in') || '27th January 2025'));
+        }
+
+        document.getElementById('logo-in').onchange = e => {
+            const reader = new FileReader();
+            reader.onload = () => document.getElementById('v-logo').src = reader.result;
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        function downloadPDF() {
+            const element = document.getElementById('page-preview');
+            html2pdf().from(element).set({
+                margin: 0,
+                filename: 'Cover_Page_HD.pdf',
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 4, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).save();
+        }
+    </script>
+</body>
+</html>
