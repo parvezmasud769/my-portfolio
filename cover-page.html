@@ -74,8 +74,8 @@
             <h2 class="text-xl font-bold mb-4 text-indigo-800 border-b pb-2">Customizer (HD Output)</h2>
             <div class="space-y-3">
                 <input type="file" id="logo-in" accept="image/*" class="w-full p-2 border rounded">
-                <input type="text" id="uni-in" placeholder="Header University Name" oninput="update()" class="p-2 border rounded w-full">
-                <input type="text" id="dept-in" placeholder="Header Department Name" oninput="update()" class="p-2 border rounded w-full">
+                <input type="text" id="uni-in" placeholder="Your University Name" oninput="update()" class="p-2 border rounded w-full">
+                <input type="text" id="dept-in" placeholder="Your Department Name" oninput="update()" class="p-2 border rounded w-full">
                 <input type="text" id="topic-in" placeholder="Assignment Topic" oninput="update()" class="p-2 border rounded w-full">
                 <input type="text" id="course-in" placeholder="Course Code" oninput="update()" class="p-2 border rounded w-full">
                 
@@ -84,16 +84,16 @@
                         <p class="text-[10px] font-bold text-indigo-600">SUBMITTED TO</p>
                         <input type="text" id="p-name" placeholder="Teacher's Name" oninput="update()" class="p-2 border rounded w-full text-xs">
                         <input type="text" id="p-desig" placeholder="Designation" oninput="update()" class="p-2 border rounded w-full text-xs">
-                        <input type="text" id="p-dept" placeholder="Department" oninput="update()" class="p-2 border rounded w-full text-xs">
-                        <input type="text" id="p-uni-in" placeholder="University" oninput="update()" class="p-2 border rounded w-full text-xs bg-indigo-50">
+                        <input type="text" id="p-dept" placeholder="Department Name" oninput="update()" class="p-2 border rounded w-full text-xs">
+                        <input type="text" id="p-uni-in" placeholder="University Name" oninput="update()" class="p-2 border rounded w-full text-xs bg-indigo-50">
                     </div>
                     <div class="space-y-2">
                         <p class="text-[10px] font-bold text-indigo-600">SUBMITTED BY</p>
                         <input type="text" id="s-name" placeholder="Your Name" oninput="update()" class="p-2 border rounded w-full text-xs">
                         <input type="text" id="s-id" placeholder="ID No" oninput="update()" class="p-2 border rounded w-full text-xs">
                         <input type="text" id="s-session" placeholder="Session" oninput="update()" class="p-2 border rounded w-full text-xs">
-                        <input type="text" id="s-dept-in" placeholder="Department" oninput="update()" class="p-2 border rounded w-full text-xs">
-                        <input type="text" id="s-uni-in" placeholder="University" oninput="update()" class="p-2 border rounded w-full text-xs bg-indigo-50">
+                        <input type="text" id="s-dept-in" placeholder="Department Name" oninput="update()" class="p-2 border rounded w-full text-xs">
+                        <input type="text" id="s-uni-in" placeholder="University Name" oninput="update()" class="p-2 border rounded w-full text-xs bg-indigo-50">
                     </div>
                 </div>
                 <input type="text" id="date-in" placeholder="Date of submission" oninput="update()" class="p-2 border rounded w-full mt-2">
@@ -114,28 +114,28 @@
                 </div>
                 <div class="assignment-section">
                     <p>Assignment on</p>
-                    <h3 id="v-topic">Financial Statement Analysis</h3>
-                    <p id="v-course">Course Code: BI 408</p>
+                    <h3 id="v-topic">Project Management</h3>
+                    <p id="v-course">Course Code: BNI 510</p>
                 </div>
                 <div class="info-container">
                     <div>
                         <span class="label-underline">SUBMITTED TO</span>
-                        <p id="v-p-name" class="name-bold">Md. Ali Arshad Chowdhury</p>
+                        <p id="v-p-name" class="name-bold">Md. Alias Chowdhury</p>
                         <p id="v-p-desig">Professor</p>
-                        <p id="v-p-dept">Department of Accounting</p>
+                        <p id="v-p-dept">Department of Banking & Insurance</p>
                         <p id="v-p-uni">University of Chittagong</p>
                     </div>
                     <div>
                         <span class="label-underline">SUBMITTED BY</span>
                         <p id="v-s-name" class="name-bold">Masud Parvez</p>
-                        <p id="v-s-id">ID: 20306006</p>
+                        <p id="v-s-id">ID: 20306000</p>
                         <p id="v-s-session">Session: 2019-2020</p>
                         <p id="v-s-dept">Department of Banking & Insurance</p>
                         <p id="v-s-uni">University of Chittagong</p>
                     </div>
                 </div>
                 <div class="date-section">
-                    <p id="v-date">Date of submission: 27th January 2025</p>
+                    <p id="v-date">Date of submission: 14th February 2026</p>
                 </div>
             </div>
         </div>
@@ -148,21 +148,21 @@
 
             setView('v-uni', getVal('uni-in') || 'University of Chittagong');
             setView('v-dept', getVal('dept-in') || 'Department of Banking & Insurance');
-            setView('v-topic', getVal('topic-in') || 'Financial Statement Analysis');
-            setView('v-course', 'Course Code: ' + (getVal('course-in') || 'BI 408'));
+            setView('v-topic', getVal('topic-in') || 'Project Management');
+            setView('v-course', 'Course Code: ' + (getVal('course-in') || 'BNI 510'));
             
-            setView('v-p-name', getVal('p-name') || 'Md. Ali Arshad Chowdhury');
+            setView('v-p-name', getVal('p-name') || 'Md. Alias Chowdhury');
             setView('v-p-desig', getVal('p-desig') || 'Professor');
-            setView('v-p-dept', getVal('p-dept') || 'Department of Accounting');
+            setView('v-p-dept', getVal('p-dept') || 'Department of Banking & Insurance');
             setView('v-p-uni', getVal('p-uni-in') || 'University of Chittagong');
             
             setView('v-s-name', getVal('s-name') || 'Masud Parvez');
-            setView('v-s-id', 'ID: ' + (getVal('s-id') || '20306006'));
+            setView('v-s-id', 'ID: ' + (getVal('s-id') || '20306000'));
             setView('v-s-session', 'Session: ' + (getVal('s-session') || '2019-2020'));
             setView('v-s-dept', getVal('s-dept-in') || 'Department of Banking & Insurance');
             setView('v-s-uni', getVal('s-uni-in') || 'University of Chittagong');
             
-            setView('v-date', 'Date of submission: ' + (getVal('date-in') || '27th January 2025'));
+            setView('v-date', 'Date of submission: ' + (getVal('date-in') || '14th February 2025'));
         }
 
         document.getElementById('logo-in').onchange = e => {
