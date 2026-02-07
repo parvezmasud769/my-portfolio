@@ -28,10 +28,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .custom-shadow {
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
-        }
-
         .nav-link:hover {
             color: #818cf8;
             transition: 0.3s;
@@ -42,9 +38,10 @@
 
     <nav class="fixed w-full z-50 glass px-6 py-4 flex justify-between items-center">
         <div class="text-2xl font-bold gradient-text">Masud Parvez</div>
-        <div class="hidden md:flex gap-8 font-medium">
+        <div class="hidden md:flex gap-8 font-medium items-center">
             <a href="#home" class="nav-link">Home</a>
             <a href="#qr-tool" class="nav-link">QR Generator</a>
+            <a href="cover-page.html" target="_blank" class="nav-link text-indigo-400 font-bold border-b border-transparent hover:border-indigo-400 transition">Cover Page Tool</a>
             <a href="#skills" class="nav-link">Skills</a>
         </div>
         <button class="bg-indigo-600 px-5 py-2 rounded-full text-sm font-bold hover:bg-indigo-500 transition">Contact Me</button>
@@ -56,8 +53,12 @@
                 <h2 class="text-xl text-indigo-400 font-semibold mb-4">Hello, I'm</h2>
                 <h1 class="text-5xl md:text-7xl font-extrabold mb-6">Masud Parvez</h1>
                 <p class="text-slate-400 text-lg mb-8 max-w-xl">
-                    আমি একজন ওয়েব ডেভেলপার এবং টেক এনথুসিয়াস্ট। আমি সুন্দর এবং কার্যকর ডিজিটাল সলিউশন তৈরি করতে পছন্দ করি। নিচে আমার তৈরি করা কিউআর টুলটি ট্রাই করে দেখুন!
+                    আমি একজন ওয়েব ডেভেলপার এবং টেক এনথুসিয়াস্ট। আমি সুন্দর এবং কার্যকর ডিজিটাল সলিউশন তৈরি করতে পছন্দ করি। নিচে আমার তৈরি করা টুলগুলো ট্রাই করে দেখুন!
                 </p>
+                <div class="flex gap-4 justify-center md:justify-start mb-8">
+                    <a href="#qr-tool" class="bg-indigo-600 px-6 py-3 rounded-xl text-sm font-bold hover:bg-indigo-500 transition shadow-lg">QR Tool</a>
+                    <a href="cover-page.html" target="_blank" class="bg-slate-800 border border-slate-700 px-6 py-3 rounded-xl text-sm font-bold hover:bg-slate-700 transition">Cover Page Generator</a>
+                </div>
                 <div class="flex gap-4 justify-center md:justify-start">
                     <a href="#" class="text-2xl hover:text-indigo-400 transition"><i class="fab fa-github"></i></a>
                     <a href="#" class="text-2xl hover:text-indigo-400 transition"><i class="fab fa-facebook"></i></a>
@@ -65,14 +66,13 @@
                 </div>
             </div>
             <div class="flex-1 flex justify-center">
-    <div class="relative w-64 h-64 md:w-80 md:h-80">
-        <div class="absolute inset-0 bg-indigo-500 rounded-full blur-3xl opacity-20 animate-pulse"></div>
-        
-        <img src="https://media.licdn.com/dms/image/v2/D5603AQH7NpnqjTXp9A/profile-displayphoto-scale_200_200/B56Zsi65QLJUAo-/0/1765817424462?e=1772064000&v=beta&t=2Agxg3_8StM4rqjqWi2nf9MIZQDcm-H_96a5owPzuxI" 
-             alt="Masud Parvez" 
-             class="rounded-3xl border-2 border-indigo-500/30 object-cover w-full h-full relative z-10 shadow-2xl">
-    </div>
-</div>
+                <div class="relative w-64 h-64 md:w-80 md:h-80">
+                    <div class="absolute inset-0 bg-indigo-500 rounded-full blur-3xl opacity-20 animate-pulse"></div>
+                    <img src="https://media.licdn.com/dms/image/v2/D5603AQH7NpnqjTXp9A/profile-displayphoto-scale_200_200/B56Zsi65QLJUAo-/0/1765817424462?e=1772064000&v=beta&t=2Agxg3_8StM4rqjqWi2nf9MIZQDcm-H_96a5owPzuxI" 
+                         alt="Masud Parvez" 
+                         class="rounded-3xl border-2 border-indigo-500/30 object-cover w-full h-full relative z-10 shadow-2xl">
+                </div>
+            </div>
         </div>
     </section>
 
@@ -108,8 +108,7 @@
                         <h3 class="font-bold flex items-center gap-2"><i class="fas fa-clock-rotate-left"></i> History</h3>
                         <button onclick="clearHistory()" class="text-xs text-red-400">Clear All</button>
                     </div>
-                    <div id="history-list" class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                        </div>
+                    <div id="history-list" class="space-y-3 max-h-[300px] overflow-y-auto pr-2"></div>
                 </div>
             </div>
         </div>
@@ -140,29 +139,24 @@
     </section>
 
     <footer class="py-10 text-center border-t border-slate-800">
-        <p class="text-slate-500">© 2026 Masud Parvez Built with ❤️ </p>
+        <p class="text-slate-500">© 2026 Masud Parvez | Built with ❤️ </p>
     </footer>
 
     <script>
-        // QR Logic
+        // QR Logic from your code
         let history = JSON.parse(localStorage.getItem('my-site-qr-history') || '[]');
-
         window.onload = renderHistory;
 
         function generateQR() {
             const input = document.getElementById('qr-input').value.trim();
             if(!input) return alert("Please enter text!");
-
             const url = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input)}`;
-            
             document.getElementById('qr-image').src = url;
             document.getElementById('preview-area').classList.remove('hidden');
             document.getElementById('download-btn').onclick = () => downloadQR(url, input);
-
-            // Update History
             const entry = { text: input, url: url, time: new Date().toLocaleTimeString() };
             history.unshift(entry);
-            history = history.slice(0, 5); // Keep last 5
+            history = history.slice(0, 5);
             localStorage.setItem('my-site-qr-history', JSON.stringify(history));
             renderHistory();
         }
@@ -181,7 +175,7 @@
             list.innerHTML = history.length ? '' : '<p class="text-slate-600 text-center">No recent activity</p>';
             history.forEach((item, i) => {
                 list.innerHTML += `
-                    <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                    <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700 mb-2">
                         <span class="truncate text-sm w-32">${item.text}</span>
                         <div class="flex gap-3">
                             <button onclick="viewHistory(${i})" class="text-indigo-400"><i class="fas fa-eye"></i></button>
@@ -205,8 +199,4 @@
         }
     </script>
 </body>
-
 </html>
-
-
-
