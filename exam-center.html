@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Exam Center | Masud Parvez</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #0b1121; color: white; }
+        .glass-card { background: rgba(22, 30, 49, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; }
+        .option-btn { width: 100%; text-align: left; padding: 16px; margin-bottom: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; transition: 0.3s; cursor: pointer; }
+        .option-btn:hover:not([disabled]) { border-color: #5b5df8; background: rgba(91, 93, 248, 0.1); }
+        .correct { background: #10b981 !important; border-color: #10b981 !important; }
+        .wrong { background: #ef4444 !important; border-color: #ef4444 !important; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+    <div class="max-w-2xl w-full glass-card p-8 md:p-12 shadow-2xl border border-indigo-500/20">
+        <div id="header" class="text-center mb-10">
+            <div class="bg-indigo-600/20 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-indigo-500/30">
+                <i class="fas fa-robot text-4xl text-indigo-500"></i>
+            </div>
+            <h1 class="text-3xl font-black mb-2">AI <span class="text-indigo-500">Exam Center</span></h1>
+            <p class="text-gray-400 text-sm font-bold uppercase tracking-widest">Hugging Face AI চালিত কুইজ</p>
+        </div>
+
+        <div id="setup-view" class="text-center">
+            <button onclick="initExam()" class="bg-[#5b5df8] hover:bg-indigo-700 text-white px-12 py-4 rounded-2xl font-black transition transform hover:-translate-y-1">
+                পরীক্ষা শুরু করুন
+            </button>
+        </div>
+
+        <div id="loader" class="hidden text-center py-10">
+            <div class="animate-spin text-indigo-500 text-5xl mb-6"><i class="fas fa-spinner"></i></div>
+            <p id="load-msg" class="text-indigo-400 font-bold">AI প্রশ্ন তৈরি করছে...</p>
+        </div>
+
+        <div id="quiz-ui" class="hidden">
+            <div class="flex justify-between items-center mb-8 bg-indigo-500/10 p-4 rounded-2xl">
+                <span class="text-xs font-black text-indigo-400">প্রশ্ন: <span id="q-num">1</span>/5</span>
+                <span class="text-xs font-black text-green-400">স্কোর: <span id="score">0</span></span>
+            </div>
+            <h2 id="q-text" class="text-xl font-bold mb-10"></h2>
+            <div id="options-grid"></div>
+            <button id="next-btn" onclick="nextQuestion()" class="hidden w-full mt-10 bg-white text-black py-4 rounded-2xl font-black">
+                পরবর্তী প্রশ্ন
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            API_KEY: "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", 
+            GH_USER: "parvezmasud769",
+            GH_REPO: "my-portfolio",
+            GH_FOLDER: "books"
+        };
+
+        let questions = [];
+        let currentIdx = 0;
+        let score = 0;
+
+        async function initExam() {
+            toggleView('loader');
+            try {
+                const folderUrl = `https://api.github.com/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${CONFIG.GH_FOLDER}`;
+                const res = await fetch(folderUrl);
+                const files = await res.json();
+                const pdfFiles = files.filter(f => f.name.toLowerCase().endsWith('.pdf'));
+                
+                const randomFile = pdfFiles[Math.floor(Math.random() * pdfFiles.length)];
+                const rawUrl = `https://raw.githubusercontent.com/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/main/${CONFIG.GH_FOLDER}/${randomFile.name}`;
+
+                const text = await extractText(rawUrl);
+                await getAIQuestions(text);
+                
+                toggleView('quiz-ui');
+                showQuestion();
+            } catch (e) {
+                alert("AI ব্যস্ত আছে, কিছুক্ষণ পর আবার চেষ্টা করুন!");
+                location.reload();
+            }
+        }
+
+        async function extractText(url) {
+            const res = await fetch(url);
+            const data = await res.arrayBuffer();
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+            const pdf = await pdfjsLib.getDocument(data).promise;
+            const page = await pdf.getPage(1); // প্রথম পৃষ্ঠা থেকে প্রশ্ন
+            const content = await page.getTextContent();
+            return content.items.map(s => s.str).join(" ");
+        }
+
+        async function getAIQuestions(text) {
+            const prompt = `Task: Create 5 Bengali MCQs from text. Output ONLY valid JSON array. Example: [{"q":"...","options":["...","...","...","..."],"correct":0}]. Text: ${text.substring(0, 500)}`;
+            
+            const res = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${CONFIG.API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ inputs: prompt })
+            });
+            
+            const data = await res.json();
+            const rawOutput = data[0].generated_text;
+            const jsonPart = rawOutput.substring(rawOutput.indexOf('['), rawOutput.lastIndexOf(']') + 1);
+            questions = JSON.parse(jsonPart);
+        }
+
+        function showQuestion() {
+            const q = questions[currentIdx];
+            document.getElementById('q-num').innerText = currentIdx + 1;
+            document.getElementById('q-text').innerText = q.q;
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = "";
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn";
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    if(i === q.correct) { btn.classList.add('correct'); score++; }
+                    else { btn.classList.add('wrong'); document.querySelectorAll('.option-btn')[q.correct].classList.add('correct'); }
+                    document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+                    document.getElementById('next-btn').classList.remove('hidden');
+                    document.getElementById('score').innerText = score;
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            if(currentIdx < questions.length) showQuestion();
+            else { alert(`পরীক্ষা শেষ! আপনার স্কোর: ${score}/5`); location.reload(); }
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function toggleView(id) {
+            ['setup-view', 'loader', 'quiz-ui'].forEach(v => document.getElementById(v).classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
