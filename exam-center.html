@@ -4,99 +4,154 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI কুইজ সেন্টার</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Arial', sans-serif; background-color: #f4f4f9; padding: 20px; display: flex; justify-content: center; }
-        .container { max-width: 700px; width: 100%; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        select { padding: 10px; width: 100%; margin-bottom: 20px; border-radius: 5px; border: 1px solid #ddd; }
-        .quiz-box { text-align: left; margin-top: 20px; padding: 15px; border: 1px solid #eee; border-radius: 10px; background: #fafafa; }
-        .option { display: block; margin: 8px 0; padding: 12px; background: #fff; border: 1px solid #ddd; cursor: pointer; border-radius: 8px; transition: 0.3s; }
-        .option:hover { background: #e7f3ff; border-color: #2196F3; }
-        #loading { display: none; color: #2196F3; font-weight: bold; margin: 20px 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap');
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f3f4f6; }
+        .hidden { display: none; }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-10">
 
-<div class="container">
-    <h1>AI কুইজ সেন্টার</h1>
-    
-    <select id="chapterSelect" onchange="loadChapterContent(this.value)">
-        <option value="">একটি অধ্যায় নির্বাচন করুন</option>
-        <option value="chapter1.txt">অধ্যায় ১</option>
-        <option value="chapter2.txt">অধ্যায় ২</option>
-    </select>
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-md text-center">
+        <h1 class="text-2xl font-bold mb-6 text-blue-600">AI কুইজ সেন্টার</h1>
 
-    <div id="loading">AI প্রশ্ন তৈরি করছে... একটু অপেক্ষা করুন।</div>
-    <div id="quiz-container">
-        <p>অধ্যায় নির্বাচন করলে এখানে অটোমেটিক কুইজ তৈরি হবে।</p>
+        <div id="selection-area">
+            <select id="chapter-select" class="w-full p-3 border rounded-lg mb-4 text-lg">
+                <option value="">অধ্যায় নির্বাচন করুন</option>
+                <option value="chapter1.txt">অধ্যায় ১</option>
+                <option value="chapter2.txt">অধ্যায় ২</option>
+                <option value="chapter3.txt">অধ্যায় ৩</option>
+            </select>
+            <button onclick="loadChapter()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">কুইজ শুরু করুন</button>
+        </div>
+
+        <div id="loading" class="hidden mt-6 text-blue-500 font-semibold animate-pulse">
+            AI প্রশ্ন তৈরি করছে... একটু অপেক্ষা করুন।
+        </div>
+
+        <div id="quiz-container" class="hidden mt-8 text-left">
+            <div id="question-text" class="text-lg font-bold mb-4"></div>
+            <div id="options-list" class="space-y-3"></div>
+            <div id="feedback" class="mt-4 font-bold hidden"></div>
+            <button id="next-btn" onclick="nextQuestion()" class="mt-6 bg-green-600 text-white px-6 py-2 rounded-lg hidden">পরবর্তী প্রশ্ন</button>
+        </div>
     </div>
-</div>
 
-<script>
-const CONFIG = {
-    // এখানে আপনার Google Cloud থেকে তৈরি করা API Key-টি বসান
-    API_KEY: "আপনার_এপিআই_কি_এখানে_দিন", 
-    GH_USER: "parvezmasud769",
-    GH_REPO: "my-portfolio",
-    GH_FOLDER: "books"
-};
+    <script>
+        const CONFIG = {
+            API_KEY: "AIzaSyBtj2DcjYJLGDwg-23eaF_U8g4aiPUsWu0", 
+            GH_USER: "parvezmasud769",
+            GH_REPO: "my-portfolio",
+            GH_FOLDER: "books"
+        };
 
-async function loadChapterContent(fileName) {
-    if (!fileName) return;
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('quiz-container').innerHTML = "";
+        let questions = [];
+        let currentQuestionIndex = 0;
 
-    const url = `https://raw.githubusercontent.com/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/main/${CONFIG.GH_FOLDER}/${fileName}`;
-    
-    try {
-        const response = await fetch(url);
-        const text = await response.text();
-        getAIQuestions(text);
-    } catch (error) {
-        alert("ফাইলটি পাওয়া যায়নি। আপনার GitHub ফোল্ডার চেক করুন।");
-        document.getElementById('loading').style.display = 'none';
-    }
-}
+        async function loadChapter() {
+            const fileName = document.getElementById('chapter-select').value;
+            if (!fileName) return alert("অনুগ্রহ করে একটি অধ্যায় নির্বাচন করুন।");
 
-async function getAIQuestions(text) {
-    const aiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.API_KEY}`;
-    
-    const body = {
-        contents: [{ parts: [{ text: "Create 5 Bengali MCQs from this text. Return ONLY a valid JSON array. Format: [{\"q\":\"প্রশ্ন\",\"options\":[\"ক\",\"খ\",\"গ\",\"ঘ\"],\"correct\":0}]. Text: " + text.substring(0, 3000) }] }]
-    };
+            document.getElementById('selection-area').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
 
-    try {
-        const response = await fetch(aiUrl, { method: "POST", body: JSON.stringify(body) });
-        const data = await response.json();
-        const result = data.candidates[0].content.parts[0].text;
-        
-        const jsonStart = result.indexOf('[');
-        const jsonEnd = result.lastIndexOf(']') + 1;
-        const questions = JSON.parse(result.substring(jsonStart, jsonEnd));
-        
-        renderQuiz(questions);
-    } catch (error) {
-        alert("AI প্রশ্ন তৈরি করতে পারছে না। আপনার API Key চেক করুন।");
-    } finally {
-        document.getElementById('loading').style.display = 'none';
-    }
-}
+            try {
+                // GitHub থেকে টেক্সট ফাইল আনা
+                const response = await fetch(`https://raw.githubusercontent.com/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/main/${CONFIG.GH_FOLDER}/${fileName}`);
+                if (!response.ok) throw new Error("File not found");
+                const text = await response.text();
 
-function renderQuiz(questions) {
-    const container = document.getElementById('quiz-container');
-    questions.forEach((q, index) => {
-        const div = document.createElement('div');
-        div.className = "quiz-box";
-        div.innerHTML = `<strong>${index + 1}. ${q.q}</strong>`;
-        q.options.forEach((opt, i) => {
-            const span = document.createElement('span');
-            span.className = "option";
-            span.innerText = opt;
-            span.onclick = () => alert(i === q.correct ? "অভিনন্দন! সঠিক উত্তর।" : "দুঃখিত, উত্তরটি ভুল।");
-            div.appendChild(span);
-        });
-        container.appendChild(div);
-    });
-}
-</script>
+                // Gemini AI দিয়ে প্রশ্ন তৈরি
+                await generateAIQuestions(text);
+            } catch (error) {
+                alert("ফাইল লোড করতে সমস্যা হয়েছে। GitHub-এ ফাইলগুলো ঠিক আছে কি না চেক করুন।");
+                resetQuiz();
+            }
+        }
+
+        async function generateAIQuestions(text) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.API_KEY}`;
+            
+            const prompt = `Create 5 Bengali MCQs from this text. Return ONLY a valid JSON array.
+            Format: [{"q":"প্রশ্ন","options":["ক","খ","গ","ঘ"],"correct":0}]. 
+            Text: ${text.substring(0, 3000)}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+
+                const data = await response.json();
+                const resultText = data.candidates[0].content.parts[0].text;
+                
+                // JSON অংশটুকু ক্লিন করে বের করা
+                const jsonStart = resultText.indexOf('[');
+                const jsonEnd = resultText.lastIndexOf(']') + 1;
+                questions = JSON.parse(resultText.substring(jsonStart, jsonEnd));
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('quiz-container').classList.remove('hidden');
+                showQuestion();
+            } catch (error) {
+                console.error(error);
+                alert("AI প্রশ্ন তৈরি করতে পারছে না। আপনার API Key চেক করুন।");
+                resetQuiz();
+            }
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestionIndex];
+            document.getElementById('question-text').innerText = `${currentQuestionIndex + 1}. ${q.q}`;
+            const optionsList = document.getElementById('options-list');
+            optionsList.innerHTML = "";
+            document.getElementById('feedback').classList.add('hidden');
+
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-3 border rounded-lg hover:bg-gray-100 transition text-left";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index);
+                optionsList.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(index) {
+            const q = questions[currentQuestionIndex];
+            const feedback = document.getElementById('feedback');
+            feedback.classList.remove('hidden');
+
+            if (index === q.correct) {
+                feedback.innerText = "সঠিক উত্তর!";
+                feedback.className = "mt-4 font-bold text-green-600";
+            } else {
+                feedback.innerText = `ভুল! সঠিক উত্তর: ${q.options[q.correct]}`;
+                feedback.className = "mt-4 font-bold text-red-600";
+            }
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                document.getElementById('next-btn').classList.add('hidden');
+                showQuestion();
+            } else {
+                alert("কুইজ শেষ! চমৎকার খেলেছেন।");
+                resetQuiz();
+            }
+        }
+
+        function resetQuiz() {
+            questions = [];
+            currentQuestionIndex = 0;
+            document.getElementById('selection-area').classList.remove('hidden');
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+    </script>
 </body>
 </html>
