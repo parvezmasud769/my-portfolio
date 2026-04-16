@@ -23,32 +23,33 @@
     <div class="max-w-2xl w-full glass-card p-8 md:p-12 shadow-2xl border border-indigo-500/20">
         <div id="header" class="text-center mb-10">
             <div class="bg-indigo-600/20 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-indigo-500/30">
-                <i class="fas fa-robot text-4xl text-indigo-500"></i>
+                <i class="fas fa-microchip text-4xl text-indigo-500"></i>
             </div>
             <h1 class="text-3xl font-black mb-2">AI <span class="text-indigo-500">Exam Center</span></h1>
             <p class="text-gray-400 text-sm font-bold uppercase tracking-widest">Hugging Face AI চালিত কুইজ</p>
         </div>
 
         <div id="setup-view" class="text-center">
-            <button onclick="initExam()" class="bg-[#5b5df8] hover:bg-indigo-700 text-white px-12 py-4 rounded-2xl font-black transition transform hover:-translate-y-1">
+            <p class="mb-6 text-gray-400">আপনার PDF থেকে AI এখন ৫টি MCQ তৈরি করবে।</p>
+            <button onclick="initExam()" class="bg-[#5b5df8] hover:bg-indigo-700 text-white px-12 py-4 rounded-2xl font-black transition shadow-lg shadow-indigo-500/20">
                 পরীক্ষা শুরু করুন
             </button>
         </div>
 
         <div id="loader" class="hidden text-center py-10">
-            <div class="animate-spin text-indigo-500 text-5xl mb-6"><i class="fas fa-spinner"></i></div>
-            <p id="load-msg" class="text-indigo-400 font-bold">AI প্রশ্ন তৈরি করছে...</p>
+            <div class="animate-spin text-indigo-500 text-5xl mb-6"><i class="fas fa-circle-notch"></i></div>
+            <p id="load-msg" class="text-indigo-400 font-bold italic">AI আপনার বই পড়ছে এবং প্রশ্নপত্র বানাচ্ছে...</p>
         </div>
 
         <div id="quiz-ui" class="hidden">
             <div class="flex justify-between items-center mb-8 bg-indigo-500/10 p-4 rounded-2xl">
-                <span class="text-xs font-black text-indigo-400">প্রশ্ন: <span id="q-num">1</span>/5</span>
-                <span class="text-xs font-black text-green-400">স্কোর: <span id="score">0</span></span>
+                <span class="text-xs font-black text-indigo-400 uppercase">প্রশ্ন: <span id="q-num">1</span>/5</span>
+                <span class="text-xs font-black text-green-400 uppercase">স্কোর: <span id="score">0</span></span>
             </div>
-            <h2 id="q-text" class="text-xl font-bold mb-10"></h2>
-            <div id="options-grid"></div>
-            <button id="next-btn" onclick="nextQuestion()" class="hidden w-full mt-10 bg-white text-black py-4 rounded-2xl font-black">
-                পরবর্তী প্রশ্ন
+            <h2 id="q-text" class="text-xl font-bold mb-10 leading-relaxed"></h2>
+            <div id="options-grid" class="space-y-3"></div>
+            <button id="next-btn" onclick="nextQuestion()" class="hidden w-full mt-10 bg-white text-black py-4 rounded-2xl font-black hover:bg-indigo-500 hover:text-white transition">
+                পরবর্তী প্রশ্ন <i class="fas fa-arrow-right ml-2"></i>
             </button>
         </div>
     </div>
@@ -73,6 +74,8 @@
                 const files = await res.json();
                 const pdfFiles = files.filter(f => f.name.toLowerCase().endsWith('.pdf'));
                 
+                if(pdfFiles.length === 0) throw new Error("No PDF found");
+                
                 const randomFile = pdfFiles[Math.floor(Math.random() * pdfFiles.length)];
                 const rawUrl = `https://raw.githubusercontent.com/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/main/${CONFIG.GH_FOLDER}/${randomFile.name}`;
 
@@ -82,8 +85,9 @@
                 toggleView('quiz-ui');
                 showQuestion();
             } catch (e) {
-                alert("AI ব্যস্ত আছে, কিছুক্ষণ পর আবার চেষ্টা করুন!");
-                location.reload();
+                console.error(e);
+                alert("AI বর্তমানে অনেক ব্যস্ত। ১-২ মিনিট পর আবার 'পরীক্ষা শুরু করুন' বাটনে ক্লিক করুন।");
+                toggleView('setup-view');
             }
         }
 
@@ -92,18 +96,19 @@
             const data = await res.arrayBuffer();
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
             const pdf = await pdfjsLib.getDocument(data).promise;
-            const page = await pdf.getPage(1); // প্রথম পৃষ্ঠা থেকে প্রশ্ন
+            const pageNum = Math.floor(Math.random() * pdf.numPages) + 1;
+            const page = await pdf.getPage(pageNum);
             const content = await page.getTextContent();
             return content.items.map(s => s.str).join(" ");
         }
 
         async function getAIQuestions(text) {
-            const prompt = `Task: Create 5 Bengali MCQs from text. Output ONLY valid JSON array. Example: [{"q":"...","options":["...","...","...","..."],"correct":0}]. Text: ${text.substring(0, 500)}`;
+            const prompt = `[INST] Create 5 Bengali MCQs from this text. Output MUST be ONLY a JSON array. Example: [{"q":"...","options":["...","...","...","..."],"correct":0}]. Text: ${text.substring(0, 800)} [/INST]`;
             
-            const res = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", {
+            const res = await fetch("https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta", {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${CONFIG.API_KEY}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ inputs: prompt })
+                body: JSON.stringify({ inputs: prompt, parameters: { return_full_text: false, max_new_tokens: 1000 } })
             });
             
             const data = await res.json();
@@ -135,9 +140,13 @@
 
         function nextQuestion() {
             currentIdx++;
-            if(currentIdx < questions.length) showQuestion();
-            else { alert(`পরীক্ষা শেষ! আপনার স্কোর: ${score}/5`); location.reload(); }
-            document.getElementById('next-btn').classList.add('hidden');
+            if(currentIdx < questions.length) {
+                showQuestion();
+                document.getElementById('next-btn').classList.add('hidden');
+            } else {
+                alert(`মাসুদ, পরীক্ষা শেষ! আপনার স্কোর: ${score}/5`);
+                location.reload();
+            }
         }
 
         function toggleView(id) {
