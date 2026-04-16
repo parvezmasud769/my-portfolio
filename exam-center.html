@@ -1,178 +1,49 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Exam Center | Masud Parvez</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
-        body { font-family: 'Hind Siliguri', sans-serif; background-color: #0b1121; color: white; overflow-x: hidden; }
-        .glass-card { background: rgba(22, 30, 49, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .option-btn { width: 100%; text-align: left; padding: 16px; margin-bottom: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; transition: 0.3s; cursor: pointer; color: #cbd5e1; }
-        .option-btn:hover:not([disabled]) { border-color: #5b5df8; background: rgba(91, 93, 248, 0.1); transform: translateX(5px); }
-        .correct { background: #10b981 !important; border-color: #10b981 !important; color: white !important; font-weight: bold; }
-        .wrong { background: #ef4444 !important; border-color: #ef4444 !important; color: white !important; }
-        .hidden { display: none !important; }
-        .loader-spin { border: 4px solid rgba(255, 255, 255, 0.1); border-left-color: #5b5df8; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
-</head>
-<body class="min-h-screen flex items-center justify-center p-4">
+const CONFIG = {
+    // আপনার সার্ভিস অ্যাকাউন্ট ফাইল থেকে নেওয়া তথ্য
+    API_KEY: "AIzaSy" + "...", // নোট: সরাসরি API Key ব্যবহার করা ব্রাউজারের জন্য সবচেয়ে ভালো
+    PRIVATE_KEY: `-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC03VpwhZWvUvzy\nQYaMvJc0kAa2Q8gNJ5tT1bvCRo89j6F8r8N3p/k9XgzsbhfPRt6Rg/JkLXmNPhqC\nssvRx2DlperbhTsRYuH2+uf7YpB71Iv42eg7ih1dtpZhouj4LKjo6p8JwFjiZTzD\nGQiynqhLqZf5n+aS0ySbROrWkAlsJKJmMfkozFa0iwlvMtkbdGFAiJiXO/2rtp2K\nh0jvz6iIapNnJK3HDqfmjBX6IvMh7EQ8E/uNgHU3AHjPlhpndaN4mmaHXM8Eb4rs\n8J1OtGf0+33poMMnwLgEn+i8IFn3WCn0GvhrjypQylerIFaQwYjJFDkFrzNzPfXd\npe5pqB7DAgMBAAECggEAI757WTGNW5DzHI2GodnDqEeui+bpanAhangbG1IGjQwN\nxi6WWtd/knk75J39ZqGC6w9AoDu8ggV8B8h+L39PzxLzT18NRWpdbgo4Pp5EH7Tp\n1Mx78QhitVqYbcNcd2+cEiwMMkkpR9TqJUSVS3e/mvRxbIwFbY789RKxtqXQtuZR\nJBSt6rbfvOFM6R8kNhvchkqOS52uLAUZUrf7mbcw2N5EIJDC9tPnq1r8Q/V+bTMo\nQKCfZiwB0R3C76nFFUXvDhpdGczUhamdaYOstACa8wiTdP546HVT5Jd+b8kGMnwk\nenLjnKYO8N1EB4PMv986Hq1koxgAY0qGODgMaepWAQKBgQDsb+PN9ppis6bSMVxh\nsH3q1+esWqHSZTFWm4rRMfPfE7VhvJG40D+7+XZXExVNmVjvGM0NtsTiRXswVNop\nq1mQx9ilRd0+GQHjpIR7Z4r29BFf5qVC65pu+g3NRO9sr/5aY7QaKMLv/Ru2FXLu\nM3p4e25ZsJlzlLL0q/aAqSxjIQKBgQDD1FolhAH+XYfWQ8QtUBScobqbJ/e9+rcj\nXBCVHmqFTdPFYCjx98eFAMw58UvmT3ZJ1hiZRGb6kgXqIZ5HFqdziiWf98ZwI5k8\nA54iYjv2Ywnt/ZFxPAa7pFtWTSQoqdCUxToobe6gpz7mbndnV9KldD1JvTIkhzOw\n+MukG22pYwKBgQCsZaFrSoajtW7MEKXVrUUC+c65Q5R+vr5M8jkz9AJoBAzbaQ2v\n/liajXkWYJnF7SyFmkXZ3AyPGC6MvTId9Azonm9/gwOhBcb0376h5IvVKX2JubmC\npBwFE1sA82TIkUMbUVu/Pz10k8+i4tzchrikJQv/Zd9eAWzDLqgchD4TQQKBgFBW\nX50gaMj3ifCG4IZOYgZX+vwIC4SuxE8HR+5FCiIh6Y0BhAqwQfP4fdAPg7m6Q6bK\n5FCMVUraeP6ySAKV8qBdvk3AEnKSyBxsx4UHk93ih4JREkfH/mMgbDAdeYYNFHrT\n5qYLY2gY9J8IFogY6VvjMfl8WoPNy5EAoFp0vipNAoGBANVUL0JMWDbyfWMoZ/hp\nR2bjNpRFW353IAKw5bwFu9uHjD1LTWKQc9WFf7xkYaW0pDHTTZK2weiQxSQgVRlQ\nZrFzE0OowSVfkDh8J7s9IDTK8cGQlNJ+dkeOfuT8KzWK50h9+qrJHr75uNid6seV\nDSakNFrxjQ8cPZkLurZc/xKy\n-----END PRIVATE KEY-----\n`,
+    CLIENT_EMAIL: "gemini-quiz@mineral-silicon-493514-c7.iam.gserviceaccount.com",
+    GH_USER: "parvezmasud769",
+    GH_REPO: "my-portfolio",
+    GH_FOLDER: "books"
+};
 
-    <div class="max-w-2xl w-full glass-card p-6 md:p-12 border border-indigo-500/20">
-        <div id="header" class="text-center mb-8">
-            <div class="bg-indigo-600/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-indigo-500/30">
-                <i class="fas fa-brain text-3xl text-indigo-400"></i>
-            </div>
-            <h1 class="text-2xl md:text-3xl font-black mb-1">AI <span class="text-indigo-500">Exam Center</span></h1>
-            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Hugging Face AI চালিত কুইজ</p>
-        </div>
+async function getAIQuestions(text) {
+    // জেমিনি এপিআই ইউআরএল (API Key প্রয়োজন হতে পারে)
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.API_KEY}`;
+    
+    const promptData = {
+        contents: [{
+            parts: [{ 
+                text: "You are an exam controller. Based on the following Bengali text, create 5 Multiple Choice Questions (MCQ) in Bengali. Return ONLY a valid JSON array. Each object must have 'q' (question), 'options' (array of 4 strings), and 'correct' (index 0-3). Text: " + text.substring(0, 3000) 
+            }]
+        }]
+    };
 
-        <div id="setup-view" class="text-center">
-            <p class="mb-8 text-gray-400 text-sm">আপনার 'books' ফোল্ডারের PDF থেকে AI ৫টি প্রশ্ন তৈরি করবে।</p>
-            <button onclick="initExam()" class="bg-[#5b5df8] hover:bg-indigo-700 text-white px-10 py-4 rounded-xl font-black transition-all shadow-lg shadow-indigo-500/20 active:scale-95">
-                পরীক্ষা শুরু করুন
-            </button>
-        </div>
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(promptData)
+        });
 
-        <div id="loader" class="hidden text-center py-8">
-            <div class="loader-spin"></div>
-            <p id="load-msg" class="text-indigo-400 font-semibold animate-pulse text-sm">AI আপনার বইটি পড়ছে...</p>
-            <p class="text-gray-500 text-[10px] mt-4 uppercase tracking-tighter">প্রথমবার লোড হতে ৩০ সেকেন্ড পর্যন্ত লাগতে পারে</p>
-        </div>
-
-        <div id="quiz-ui" class="hidden">
-            <div class="flex justify-between items-center mb-6 bg-white/5 p-3 rounded-xl border border-white/10">
-                <span class="text-[10px] font-black text-indigo-400 uppercase">প্রশ্ন: <span id="q-num">1</span>/5</span>
-                <span class="text-[10px] font-black text-green-400 uppercase">স্কোর: <span id="score">0</span></span>
-            </div>
-            <h2 id="q-text" class="text-lg md:text-xl font-bold mb-8 leading-relaxed text-slate-100"></h2>
-            <div id="options-grid"></div>
-            <button id="next-btn" onclick="nextQuestion()" class="hidden w-full mt-8 bg-indigo-500 text-white py-4 rounded-xl font-black shadow-xl hover:bg-indigo-600 transition active:scale-95">
-                পরবর্তী প্রশ্ন <i class="fas fa-arrow-right ml-2"></i>
-            </button>
-        </div>
-    </div>
-
-    <script>
-        const CONFIG = {
-            API_KEY: "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", 
-            GH_USER: "parvezmasud769",
-            GH_REPO: "my-portfolio",
-            GH_FOLDER: "books"
-        };
-
-        let questions = [];
-        let currentIdx = 0;
-        let score = 0;
-
-        async function initExam() {
-            toggleView('loader');
-            try {
-                const folderUrl = `https://api.github.com/repos/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/contents/${CONFIG.GH_FOLDER}`;
-                const res = await fetch(folderUrl);
-                const files = await res.json();
-                const pdfFiles = files.filter(f => f.name.toLowerCase().endsWith('.pdf'));
-                
-                if(pdfFiles.length === 0) throw new Error("No PDF found");
-                
-                const randomFile = pdfFiles[Math.floor(Math.random() * pdfFiles.length)];
-                const rawUrl = `https://raw.githubusercontent.com/${CONFIG.GH_USER}/${CONFIG.GH_REPO}/main/${CONFIG.GH_FOLDER}/${randomFile.name}`;
-
-                const text = await extractText(rawUrl);
-                document.getElementById('load-msg').innerText = "AI প্রশ্নপত্র তৈরি করছে...";
-                
-                await getAIQuestions(text);
-                toggleView('quiz-ui');
-                showQuestion();
-            } catch (e) {
-                console.error(e);
-                alert("AI বর্তমানে অনেক ব্যস্ত। ১ মিনিট পর আবার চেষ্টা করুন।");
-                toggleView('setup-view');
-            }
-        }
-
-        async function extractText(url) {
-            const res = await fetch(url);
-            const data = await res.arrayBuffer();
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-            const pdf = await pdfjsLib.getDocument(data).promise;
-            const pageNum = Math.floor(Math.random() * Math.min(pdf.numPages, 10)) + 1;
-            const page = await pdf.getPage(pageNum);
-            const content = await page.getTextContent();
-            return content.items.map(s => s.str).join(" ");
-        }
-
-        async function getAIQuestions(text, retryCount = 0) {
-            // একাধিক মডেলের লিস্ট (একটি কাজ না করলে অন্যটি করবে)
-            const models = [
-                "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
-                "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta"
-            ];
-
-            const prompt = `Task: Create 5 Bengali MCQs from this text. Output ONLY valid JSON array. Format: [{"q":"...","options":["...","...","...","..."],"correct":0}]. Text: ${text.substring(0, 700)}`;
+        const data = await response.json();
+        
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+            let resultText = data.candidates[0].content.parts[0].text;
             
-            try {
-                const res = await fetch(models[retryCount % models.length], {
-                    method: "POST",
-                    headers: { "Authorization": `Bearer ${CONFIG.API_KEY}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ inputs: prompt, parameters: { return_full_text: false, max_new_tokens: 800 } })
-                });
-                
-                const data = await res.json();
-                const rawOutput = data[0].generated_text || data.generated_text;
-                const jsonPart = rawOutput.substring(rawOutput.indexOf('['), rawOutput.lastIndexOf(']') + 1);
-                questions = JSON.parse(jsonPart);
-                
-                if(questions.length < 5) throw new Error("Incomplete questions");
-            } catch (err) {
-                if (retryCount < 2) {
-                    return getAIQuestions(text, retryCount + 1);
-                } else {
-                    throw err;
-                }
-            }
+            // JSON অংশটুকু খুঁজে বের করা
+            const jsonStart = resultText.indexOf('[');
+            const jsonEnd = resultText.lastIndexOf(']') + 1;
+            const cleanJson = resultText.substring(jsonStart, jsonEnd);
+            
+            questions = JSON.parse(cleanJson);
+            displayQuestion(); // প্রশ্ন দেখানোর ফাংশন কল
+        } else {
+            throw new Error("Invalid AI response");
         }
-
-        function showQuestion() {
-            const q = questions[currentIdx];
-            document.getElementById('q-num').innerText = currentIdx + 1;
-            document.getElementById('q-text').innerText = q.q;
-            const grid = document.getElementById('options-grid');
-            grid.innerHTML = "";
-            q.options.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                btn.className = "option-btn";
-                btn.innerText = opt;
-                btn.onclick = () => {
-                    if(i === q.correct) { btn.classList.add('correct'); score++; }
-                    else { btn.classList.add('wrong'); document.querySelectorAll('.option-btn')[q.correct].classList.add('correct'); }
-                    document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
-                    document.getElementById('next-btn').classList.remove('hidden');
-                    document.getElementById('score').innerText = score;
-                };
-                grid.appendChild(btn);
-            });
-        }
-
-        function nextQuestion() {
-            currentIdx++;
-            if(currentIdx < questions.length) {
-                showQuestion();
-                document.getElementById('next-btn').classList.add('hidden');
-            } else {
-                alert(`মাসুদ, আপনার পরীক্ষা সম্পন্ন হয়েছে!\nস্কোর: ${score}/5`);
-                location.reload();
-            }
-        }
-
-        function toggleView(id) {
-            ['setup-view', 'loader', 'quiz-ui'].forEach(v => document.getElementById(v).classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-        }
-    </script>
-</body>
-</html>
+    } catch (error) {
+        console.error("AI Error:", error);
+        alert("AI প্রশ্ন তৈরি করতে পারছে না। অনুগ্রহ করে এপিআই কি চেক করুন।");
+    }
+}
