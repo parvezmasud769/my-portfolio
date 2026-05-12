@@ -3,36 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>প্রফেশনাল কুইজ সেন্টার</title>
+    <title>প্রফেশনাল কুইজ মাস্টার</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap');
-        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f3f4f6; }
-        .option-btn:disabled { cursor: not-allowed; opacity: 0.8; }
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f0f2f5; }
+        .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+        .progress-bar { transition: width 1s linear; }
     </style>
 </head>
 <body class="p-4 md:p-10">
 
-    <div class="max-w-2xl mx-auto bg-white p-6 md:p-10 rounded-3xl shadow-2xl text-center">
+    <div class="max-w-2xl mx-auto bg-white p-6 md:p-10 rounded-3xl shadow-2xl text-center relative overflow-hidden">
         <h1 class="text-3xl font-bold mb-2 text-indigo-600">কুইজ মাস্টার</h1>
-        <p class="text-gray-500 mb-8 border-b pb-4">বিষয়ভিত্তিক জ্ঞান যাচাই করুন</p>
+        <p class="text-gray-500 mb-8 border-b pb-4">নিজেকে যাচাই করুন</p>
 
         <div id="setup-area">
-            <div class="bg-indigo-50 p-6 rounded-2xl mb-6">
+            <div class="bg-indigo-50 p-6 rounded-2xl mb-6 text-left">
                 <label class="block mb-4 text-lg font-semibold text-indigo-900">একটি বিষয় পছন্দ করুন:</label>
                 <select id="subject-select" class="w-full p-4 border-2 border-indigo-200 rounded-xl mb-4 text-lg focus:border-indigo-500 outline-none transition-all">
                     <option value="bangla">বাংলা সাহিত্য ও ভাষা</option>
                     <option value="ict">তথ্য ও যোগাযোগ প্রযুক্তি (ICT)</option>
                     <option value="gk">সাধারণ জ্ঞান (GK)</option>
                 </select>
+                <p class="text-sm text-indigo-400 text-center">*প্রতিটি কুইজে ১০টি করে প্রশ্ন থাকবে।</p>
             </div>
-            <button onclick="startQuiz()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-xl hover:bg-indigo-700 transition shadow-lg">কুইজ শুরু করুন</button>
+            <button onclick="startQuiz()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-xl hover:bg-indigo-700 transition shadow-lg active:scale-95">কুইজ শুরু করুন</button>
         </div>
 
         <div id="quiz-area" class="hidden">
-            <div class="flex justify-between mb-6 text-sm font-bold text-indigo-500 bg-indigo-50 p-3 rounded-lg">
-                <span>প্রশ্ন: <span id="q-count">0</span>/১০</span>
-                <span>স্কোর: <span id="score">0</span></span>
+            <div class="w-full bg-gray-200 h-2 rounded-full mb-6">
+                <div id="timer-bar" class="progress-bar bg-red-500 h-2 rounded-full" style="width: 100%;"></div>
+            </div>
+
+            <div class="flex justify-between mb-6 text-sm font-bold">
+                <span class="text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full">প্রশ্ন: <span id="q-count">0</span>/১০</span>
+                <span class="text-red-500 bg-red-50 px-3 py-1 rounded-full">সময়: <span id="timer-text">১৫</span> সেকেন্ড</span>
+                <span class="text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full">স্কোর: <span id="score">0</span></span>
             </div>
             
             <div id="question" class="text-xl font-bold mb-8 text-gray-800 text-left leading-relaxed min-h-[80px]"></div>
@@ -41,15 +48,18 @@
             
             <div id="feedback" class="mt-6 p-4 rounded-xl font-bold hidden"></div>
             
-            <button id="next-btn" onclick="loadNext()" class="mt-8 bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold w-full hidden shadow-lg uppercase tracking-wider">পরবর্তী প্রশ্ন</button>
+            <button id="next-btn" onclick="loadNext()" class="mt-8 bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold w-full hidden shadow-lg uppercase">পরবর্তী প্রশ্ন</button>
         </div>
         
         <div id="result-card" class="hidden">
             <div class="py-10">
-                <div class="text-5xl mb-4">🏆</div>
-                <h2 class="text-2xl font-bold mb-2 text-gray-800">অভিনন্দন!</h2>
-                <p id="final-score" class="text-lg text-gray-600 mb-8"></p>
-                <button onclick="location.reload()" class="bg-emerald-600 text-white px-12 py-4 rounded-xl font-bold w-full hover:bg-emerald-700 transition shadow-md">আবার খেলুন</button>
+                <div class="text-6xl mb-6">🎉</div>
+                <h2 class="text-3xl font-bold mb-2 text-gray-800">কুইজ সম্পন্ন!</h2>
+                <div class="bg-gray-50 p-6 rounded-2xl my-6 border-2 border-dashed border-indigo-200">
+                    <p id="final-score" class="text-2xl font-bold text-indigo-600 mb-2"></p>
+                    <p id="high-score" class="text-gray-500 font-semibold"></p>
+                </div>
+                <button onclick="location.reload()" class="bg-indigo-600 text-white px-12 py-4 rounded-xl font-bold w-full hover:bg-indigo-700 transition shadow-md active:scale-95">আবার চেষ্টা করুন</button>
             </div>
         </div>
     </div>
@@ -62,24 +72,25 @@
         let selectedQuestions = [];
         let index = 0;
         let score = 0;
+        let timeLeft = 15;
+        let timerInterval;
 
         function startQuiz() {
             const subject = document.getElementById('subject-select').value;
             
-            // বিষয় অনুযায়ী ডাটা চেক করা
             try {
                 if (subject === 'bangla') selectedQuestions = banglaQuestions;
                 else if (subject === 'ict') selectedQuestions = ictQuestions;
                 else if (subject === 'gk') selectedQuestions = gkQuestions;
 
-                // বিষয়ভিত্তিক ফাইল থেকে ১০টি রেন্ডম প্রশ্ন বাছাই
+                // ১০টি রেন্ডম প্রশ্ন বাছাই
                 selectedQuestions = [...selectedQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
                 
                 document.getElementById('setup-area').classList.add('hidden');
                 document.getElementById('quiz-area').classList.remove('hidden');
                 loadQuestion();
-            } catch (error) {
-                alert("দুঃখিত, ওই বিষয়ের ফাইলটি (JS) খুঁজে পাওয়া যায়নি! গিটহাবে ফাইলটি ঠিকঠাক আছে কিনা চেক করুন।");
+            } catch (e) {
+                alert("এরর: আপনার সাবজেক্ট ফাইলটি খুঁজে পাওয়া যায়নি। গিটহাবে .js ফাইলগুলো আছে কি না চেক করুন।");
             }
         }
 
@@ -103,9 +114,46 @@
                 btn.onclick = () => checkAnswer(i, btn);
                 optionsDiv.appendChild(btn);
             });
+
+            startTimer(); // টাইমার শুরু
+        }
+
+        function startTimer() {
+            timeLeft = 15;
+            const timerBar = document.getElementById('timer-bar');
+            const timerText = document.getElementById('timer-text');
+            
+            clearInterval(timerInterval);
+            timerText.innerText = timeLeft;
+            timerBar.style.width = "100%";
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerText.innerText = timeLeft;
+                timerBar.style.width = (timeLeft / 15 * 100) + "%";
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function handleTimeOut() {
+            const q = selectedQuestions[index];
+            const feedback = document.getElementById('feedback');
+            const btns = document.querySelectorAll('.option-btn');
+            
+            btns.forEach(b => b.disabled = true);
+            feedback.classList.remove('hidden');
+            feedback.innerText = "সময় শেষ! সঠিক উত্তর: " + q.options[q.correct];
+            feedback.className = "mt-6 p-4 rounded-xl font-bold bg-yellow-100 text-yellow-700 text-center";
+            
+            document.getElementById('next-btn').classList.remove('hidden');
         }
 
         function checkAnswer(selected, btn) {
+            clearInterval(timerInterval); // টাইমার থামানো
             const q = selectedQuestions[index];
             const feedback = document.getElementById('feedback');
             const btns = document.querySelectorAll('.option-btn');
@@ -133,10 +181,26 @@
             if (index < selectedQuestions.length) {
                 loadQuestion();
             } else {
-                document.getElementById('quiz-area').classList.add('hidden');
-                document.getElementById('result-card').classList.remove('hidden');
-                document.getElementById('final-score').innerText = "আপনার মোট স্কোর: " + score + " / " + selectedQuestions.length;
+                showResult();
             }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-area').classList.add('hidden');
+            document.getElementById('result-card').classList.remove('hidden');
+            
+            // হাই স্কোর সেভ করা (লোকাল স্টোরেজ)
+            const subject = document.getElementById('subject-select').value;
+            let highScoreKey = "highScore_" + subject;
+            let currentHighScore = localStorage.getItem(highScoreKey) || 0;
+
+            if (score > currentHighScore) {
+                localStorage.setItem(highScoreKey, score);
+                currentHighScore = score;
+            }
+
+            document.getElementById('final-score').innerText = "আপনার স্কোর: " + score + " / " + selectedQuestions.length;
+            document.getElementById('high-score').innerText = "এই বিষয়ে আপনার সেরা স্কোর: " + currentHighScore;
         }
     </script>
 </body>
