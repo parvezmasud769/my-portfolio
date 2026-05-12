@@ -3,55 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>সহজ কুইজ সেন্টার</title>
+    <title>প্রিমিয়াম কুইজ সেন্টার</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap');
-        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f3f4f6; }
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f0f2f5; }
+        .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
     </style>
 </head>
 <body class="p-4 md:p-10">
 
-    <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-md text-center">
-        <h1 class="text-2xl font-bold mb-6 text-blue-600">কুইজ সেন্টার</h1>
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl text-center">
+        <h1 class="text-3xl font-bold mb-2 text-blue-700">কুইজ মাস্টার</h1>
+        <p class="text-gray-500 mb-8">আপনার জ্ঞান যাচাই করুন</p>
 
-        <div id="quiz-box">
-            <div id="question" class="text-lg font-bold mb-4"></div>
+        <div id="quiz-container">
+            <div class="flex justify-between mb-4 text-sm font-semibold text-gray-600">
+                <span>প্রশ্ন: <span id="current-count">0</span>/৫</span>
+                <span>স্কোর: <span id="score">0</span></span>
+            </div>
+            
+            <div id="question" class="text-xl font-bold mb-6 text-gray-800 min-h-[60px]">লোড হচ্ছে...</div>
+            
             <div id="options" class="space-y-3"></div>
-            <button id="next-btn" onclick="loadRandomQuestion()" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hidden">পরবর্তী প্রশ্ন</button>
+            
+            <div id="feedback" class="mt-6 p-3 rounded-lg font-bold hidden"></div>
+            
+            <button id="next-btn" onclick="nextQuestion()" class="mt-8 bg-blue-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-blue-700 transition w-full hidden shadow-lg">পরবর্তী প্রশ্ন</button>
+            
+            <button id="restart-btn" onclick="startNewSession()" class="mt-8 bg-green-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-green-700 transition w-full hidden">আবার শুরু করুন</button>
         </div>
     </div>
 
     <script>
-        // এখানে আপনি আপনার সব প্রশ্ন লিখে রাখতে পারেন
-        const myQuestions = [
-            { q: "বাংলাদেশের রাজধানী কোথায়?", options: ["ঢাকা", "চট্টগ্রাম", "খুলনা", "সিলেট"], correct: 0 },
-            { q: "কম্পিউটারের মস্তিষ্ক কাকে বলা হয়?", options: ["RAM", "Monitor", "CPU", "Hard Disk"], correct: 2 },
-            { q: "সূর্য কোন দিকে ওঠে?", options: ["পশ্চিম", "উত্তর", "দক্ষিণ", "পূর্ব"], correct: 3 }
+        // এখানে আপনি ১০০০ প্রশ্ন পর্যন্ত যোগ করতে পারবেন। 
+        // ফরম্যাটটি ঠিক রেখে শুধু কমা দিয়ে দিয়ে প্রশ্ন বাড়ান।
+        const questionBank = [
+            { q: "কম্পিউটারের স্থায়ী স্মৃতি কোনটি?", options: ["ROM", "RAM", "Cache", "Buffer"], correct: 0 },
+            { q: "নিচের কোনটি ইনপুট ডিভাইস?", options: ["Monitor", "Printer", "Keyboard", "Speaker"], correct: 2 },
+            { q: "WWW এর পূর্ণরূপ কী?", options: ["World Wide Web", "World Whole Web", "Wide World Web", "Web Wide World"], correct: 0 },
+            { q: "বাংলাদেশের প্রথম সার্চ ইঞ্জিনের নাম কী?", options: ["চরকি", "পিপীলিকা", "খুঁজুন", "গুগল"], correct: 1 },
+            { q: "১ গিগাবাইট সমান কত মেগাবাইট?", options: ["৫১২ MB", "১০২৪ MB", "১০০০ MB", "২০৪৮ MB"], correct: 1 },
+            { q: "ইমেইলের জনক কে?", options: ["রে টমলিনসন", "বিল গেটস", "স্টিভ জবস", "মার্ক জাকারবার্গ"], correct: 0 },
+            { q: "সবচেয়ে শক্তিশালী কম্পিউটার কোনটি?", options: ["মেইনফ্রেম", "মাইক্রো", "সুপার কম্পিউটার", "মিনি"], correct: 2 },
+            { q: "ফেসবুকের সদর দপ্তর কোথায়?", options: ["ক্যালিফোর্নিয়া", "নিউ ইয়র্ক", "লন্ডন", "টোকিও"], correct: 0 },
+            { q: "আধুনিক কম্পিউটারের জনক কে?", options: ["চার্লস ব্যাবেজ", "অ্যালান টুরিং", "জন ভন নিউম্যান", "স্টিভ ওয়াজনিয়াক"], correct: 1 },
+            { q: "ইউটিউব কত সালে প্রতিষ্ঠিত হয়?", options: ["২০০৩", "২০০৪", "২০০৫", "২০০৬"], correct: 2 }
+            // এভাবেই আপনি ১০০০ প্রশ্ন পর্যন্ত নিচে যোগ করতে পারবেন।
         ];
 
-        function loadRandomQuestion() {
-            const qIndex = Math.floor(Math.random() * myQuestions.length);
-            const q = myQuestions[qIndex];
-            
+        let currentQuestions = [];
+        let index = 0;
+        let score = 0;
+
+        function startNewSession() {
+            // ১০০০ প্রশ্ন থেকে প্রতিবার ৫টি রেন্ডম প্রশ্ন বাছাই করা
+            currentQuestions = [...questionBank].sort(() => 0.5 - Math.random()).slice(0, 5);
+            index = 0;
+            score = 0;
+            document.getElementById('score').innerText = score;
+            document.getElementById('restart-btn').classList.add('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = currentQuestions[index];
+            document.getElementById('current-count').innerText = index + 1;
             document.getElementById('question').innerText = q.q;
             const optionsDiv = document.getElementById('options');
-            optionsDiv.innerHTML = "";
+            const feedback = document.getElementById('feedback');
+            const nextBtn = document.getElementById('next-btn');
 
-            q.options.forEach((opt, index) => {
+            optionsDiv.innerHTML = "";
+            feedback.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+
+            q.options.forEach((opt, i) => {
                 const btn = document.createElement('button');
-                btn.className = "w-full p-3 border rounded-lg hover:bg-gray-100 text-left";
+                btn.className = "option-btn w-full p-4 border-2 border-gray-100 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition text-left font-medium text-gray-700";
                 btn.innerText = opt;
-                btn.onclick = () => {
-                    if(index === q.correct) alert("সঠিক!");
-                    else alert("ভুল! সঠিক উত্তর: " + q.options[q.correct]);
-                    loadRandomQuestion();
-                };
+                btn.onclick = () => checkAnswer(i, btn);
                 optionsDiv.appendChild(btn);
             });
         }
 
-        loadRandomQuestion(); // শুরুতেই একটি প্রশ্ন দেখাবে
+        function checkAnswer(selected, btn) {
+            const q = currentQuestions[index];
+            const feedback = document.getElementById('feedback');
+            const allBtns = document.querySelectorAll('.option-btn');
+            
+            allBtns.forEach(b => b.disabled = true);
+            feedback.classList.remove('hidden');
+
+            if (selected === q.correct) {
+                score++;
+                document.getElementById('score').innerText = score;
+                btn.classList.add('border-green-500', 'bg-green-50');
+                feedback.innerText = "সঠিক উত্তর! চমৎকার।";
+                feedback.className = "mt-6 p-3 rounded-lg font-bold bg-green-100 text-green-700";
+            } else {
+                btn.classList.add('border-red-500', 'bg-red-50');
+                allBtns[q.correct].classList.add('border-green-500', 'bg-green-50');
+                feedback.innerText = "ভুল উত্তর। সঠিক ছিল: " + q.options[q.correct];
+                feedback.className = "mt-6 p-3 rounded-lg font-bold bg-red-100 text-red-700";
+            }
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            index++;
+            if (index < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                document.getElementById('question').innerText = "কুইজ শেষ! আপনার মোট স্কোর: " + score;
+                document.getElementById('options').innerHTML = "";
+                document.getElementById('feedback').classList.add('hidden');
+                document.getElementById('next-btn').classList.add('hidden');
+                document.getElementById('restart-btn').classList.remove('hidden');
+            }
+        }
+
+        startNewSession();
     </script>
 </body>
 </html>
