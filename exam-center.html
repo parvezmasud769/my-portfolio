@@ -3,127 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI রেন্ডম কুইজ সেন্টার</title>
+    <title>সহজ কুইজ সেন্টার</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap');
         body { font-family: 'Hind Siliguri', sans-serif; background-color: #f3f4f6; }
-        .hidden { display: none; }
     </style>
 </head>
 <body class="p-4 md:p-10">
 
     <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-md text-center">
-        <h1 class="text-2xl font-bold mb-6 text-blue-600">AI কুইজ সেন্টার</h1>
+        <h1 class="text-2xl font-bold mb-6 text-blue-600">কুইজ সেন্টার</h1>
 
-        <div id="selection-area">
-            <input type="text" id="subject-input" placeholder="যেকোনো বিষয় লিখুন (উদা: সাধারণ জ্ঞান, বিজ্ঞান)" class="w-full p-3 border rounded-lg mb-4 text-lg">
-            <button onclick="startQuiz()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition w-full">কুইজ শুরু করুন</button>
-        </div>
-
-        <div id="loading" class="hidden mt-6 text-blue-500 font-semibold animate-pulse">
-            AI আপনার জন্য প্রশ্ন তৈরি করছে...
-        </div>
-
-        <div id="quiz-container" class="hidden mt-8 text-left">
-            <div id="question-text" class="text-lg font-bold mb-4"></div>
-            <div id="options-list" class="space-y-3"></div>
-            <div id="feedback" class="mt-4 font-bold hidden"></div>
-            <button id="next-btn" onclick="nextQuestion()" class="mt-6 bg-green-600 text-white px-6 py-2 rounded-lg hidden">পরবর্তী প্রশ্ন</button>
+        <div id="quiz-box">
+            <div id="question" class="text-lg font-bold mb-4"></div>
+            <div id="options" class="space-y-3"></div>
+            <button id="next-btn" onclick="loadRandomQuestion()" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hidden">পরবর্তী প্রশ্ন</button>
         </div>
     </div>
 
     <script>
-        const CONFIG = {
-            API_KEY: "AIzaSyBtj2DcjYJLGDwg-23eaF_U8g4aiPUsWu0" // আপনার কি (Key)
-        };
+        // এখানে আপনি আপনার সব প্রশ্ন লিখে রাখতে পারেন
+        const myQuestions = [
+            { q: "বাংলাদেশের রাজধানী কোথায়?", options: ["ঢাকা", "চট্টগ্রাম", "খুলনা", "সিলেট"], correct: 0 },
+            { q: "কম্পিউটারের মস্তিষ্ক কাকে বলা হয়?", options: ["RAM", "Monitor", "CPU", "Hard Disk"], correct: 2 },
+            { q: "সূর্য কোন দিকে ওঠে?", options: ["পশ্চিম", "উত্তর", "দক্ষিণ", "পূর্ব"], correct: 3 }
+        ];
 
-        let questions = [];
-        let currentQuestionIndex = 0;
-
-        async function startQuiz() {
-            const subject = document.getElementById('subject-input').value || "সাধারণ জ্ঞান";
-            document.getElementById('selection-area').classList.add('hidden');
-            document.getElementById('loading').classList.remove('hidden');
-
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.API_KEY}`;
+        function loadRandomQuestion() {
+            const qIndex = Math.floor(Math.random() * myQuestions.length);
+            const q = myQuestions[qIndex];
             
-            // AI-কে সরাসরি প্রশ্ন তৈরির ইনস্ট্রাকশন
-            const prompt = `Create 5 difficult Bengali MCQs about "${subject}". Return ONLY a valid JSON array.
-            Format: [{"q":"প্রশ্ন","options":["ক","খ","গ","ঘ"],"correct":0}]`;
-
-            try {
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
-
-                const data = await response.json();
-                let resultText = data.candidates[0].content.parts[0].text;
-                
-                const jsonStart = resultText.indexOf('[');
-                const jsonEnd = resultText.lastIndexOf(']') + 1;
-                questions = JSON.parse(resultText.substring(jsonStart, jsonEnd));
-
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('quiz-container').classList.remove('hidden');
-                showQuestion();
-            } catch (error) {
-                console.error(error);
-                alert("দুঃখিত, এআই প্রশ্ন তৈরি করতে পারছে না। আবার চেষ্টা করুন।");
-                resetQuiz();
-            }
-        }
-
-        function showQuestion() {
-            const q = questions[currentQuestionIndex];
-            document.getElementById('question-text').innerText = `${currentQuestionIndex + 1}. ${q.q}`;
-            const optionsList = document.getElementById('options-list');
-            optionsList.innerHTML = "";
-            document.getElementById('feedback').classList.add('hidden');
-            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('question').innerText = q.q;
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = "";
 
             q.options.forEach((opt, index) => {
                 const btn = document.createElement('button');
-                btn.className = "w-full p-3 border rounded-lg hover:bg-gray-100 transition text-left";
+                btn.className = "w-full p-3 border rounded-lg hover:bg-gray-100 text-left";
                 btn.innerText = opt;
-                btn.onclick = () => checkAnswer(index);
-                optionsList.appendChild(btn);
+                btn.onclick = () => {
+                    if(index === q.correct) alert("সঠিক!");
+                    else alert("ভুল! সঠিক উত্তর: " + q.options[q.correct]);
+                    loadRandomQuestion();
+                };
+                optionsDiv.appendChild(btn);
             });
         }
 
-        function checkAnswer(index) {
-            const q = questions[currentQuestionIndex];
-            const feedback = document.getElementById('feedback');
-            feedback.classList.remove('hidden');
-
-            if (index === q.correct) {
-                feedback.innerText = "সঠিক উত্তর!";
-                feedback.className = "mt-4 font-bold text-green-600";
-            } else {
-                feedback.innerText = `ভুল! সঠিক উত্তর: ${q.options[q.correct]}`;
-                feedback.className = "mt-4 font-bold text-red-600";
-            }
-            document.getElementById('next-btn').classList.remove('hidden');
-        }
-
-        function nextQuestion() {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < questions.length) {
-                showQuestion();
-            } else {
-                alert("কুইজ শেষ!");
-                resetQuiz();
-            }
-        }
-
-        function resetQuiz() {
-            questions = [];
-            currentQuestionIndex = 0;
-            document.getElementById('selection-area').classList.remove('hidden');
-            document.getElementById('quiz-container').classList.add('hidden');
-        }
+        loadRandomQuestion(); // শুরুতেই একটি প্রশ্ন দেখাবে
     </script>
 </body>
 </html>
