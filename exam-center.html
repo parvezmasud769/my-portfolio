@@ -1,129 +1,102 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>প্রিমিয়াম কুইজ সেন্টার</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap');
-        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f0f2f5; }
-        .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
-    </style>
-</head>
-<body class="p-4 md:p-10">
-
-    <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl text-center">
-        <h1 class="text-3xl font-bold mb-2 text-blue-700">কুইজ মাস্টার</h1>
-        <p class="text-gray-500 mb-8">আপনার জ্ঞান যাচাই করুন</p>
-
-        <div id="quiz-container">
-            <div class="flex justify-between mb-4 text-sm font-semibold text-gray-600">
-                <span>প্রশ্ন: <span id="current-count">0</span>/৫</span>
-                <span>স্কোর: <span id="score">0</span></span>
-            </div>
-            
-            <div id="question" class="text-xl font-bold mb-6 text-gray-800 min-h-[60px]">লোড হচ্ছে...</div>
-            
-            <div id="options" class="space-y-3"></div>
-            
-            <div id="feedback" class="mt-6 p-3 rounded-lg font-bold hidden"></div>
-            
-            <button id="next-btn" onclick="nextQuestion()" class="mt-8 bg-blue-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-blue-700 transition w-full hidden shadow-lg">পরবর্তী প্রশ্ন</button>
-            
-            <button id="restart-btn" onclick="startNewSession()" class="mt-8 bg-green-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-green-700 transition w-full hidden">আবার শুরু করুন</button>
-        </div>
-    </div>
-
-    <script>
-        // এখানে আপনি ১০০০ প্রশ্ন পর্যন্ত যোগ করতে পারবেন। 
-        // ফরম্যাটটি ঠিক রেখে শুধু কমা দিয়ে দিয়ে প্রশ্ন বাড়ান।
-        const questionBank = [
-            { q: "কম্পিউটারের স্থায়ী স্মৃতি কোনটি?", options: ["ROM", "RAM", "Cache", "Buffer"], correct: 0 },
-            { q: "নিচের কোনটি ইনপুট ডিভাইস?", options: ["Monitor", "Printer", "Keyboard", "Speaker"], correct: 2 },
-            { q: "WWW এর পূর্ণরূপ কী?", options: ["World Wide Web", "World Whole Web", "Wide World Web", "Web Wide World"], correct: 0 },
-            { q: "বাংলাদেশের প্রথম সার্চ ইঞ্জিনের নাম কী?", options: ["চরকি", "পিপীলিকা", "খুঁজুন", "গুগল"], correct: 1 },
-            { q: "১ গিগাবাইট সমান কত মেগাবাইট?", options: ["৫১২ MB", "১০২৪ MB", "১০০০ MB", "২০৪৮ MB"], correct: 1 },
-            { q: "ইমেইলের জনক কে?", options: ["রে টমলিনসন", "বিল গেটস", "স্টিভ জবস", "মার্ক জাকারবার্গ"], correct: 0 },
-            { q: "সবচেয়ে শক্তিশালী কম্পিউটার কোনটি?", options: ["মেইনফ্রেম", "মাইক্রো", "সুপার কম্পিউটার", "মিনি"], correct: 2 },
-            { q: "ফেসবুকের সদর দপ্তর কোথায়?", options: ["ক্যালিফোর্নিয়া", "নিউ ইয়র্ক", "লন্ডন", "টোকিও"], correct: 0 },
-            { q: "আধুনিক কম্পিউটারের জনক কে?", options: ["চার্লস ব্যাবেজ", "অ্যালান টুরিং", "জন ভন নিউম্যান", "স্টিভ ওয়াজনিয়াক"], correct: 1 },
-            { q: "ইউটিউব কত সালে প্রতিষ্ঠিত হয়?", options: ["২০০৩", "২০০৪", "২০০৫", "২০০৬"], correct: 2 }
-            // এভাবেই আপনি ১০০০ প্রশ্ন পর্যন্ত নিচে যোগ করতে পারবেন।
-        ];
-
-        let currentQuestions = [];
-        let index = 0;
-        let score = 0;
-
-        function startNewSession() {
-            // ১০০০ প্রশ্ন থেকে প্রতিবার ৫টি রেন্ডম প্রশ্ন বাছাই করা
-            currentQuestions = [...questionBank].sort(() => 0.5 - Math.random()).slice(0, 5);
-            index = 0;
-            score = 0;
-            document.getElementById('score').innerText = score;
-            document.getElementById('restart-btn').classList.add('hidden');
-            loadQuestion();
-        }
-
-        function loadQuestion() {
-            const q = currentQuestions[index];
-            document.getElementById('current-count').innerText = index + 1;
-            document.getElementById('question').innerText = q.q;
-            const optionsDiv = document.getElementById('options');
-            const feedback = document.getElementById('feedback');
-            const nextBtn = document.getElementById('next-btn');
-
-            optionsDiv.innerHTML = "";
-            feedback.classList.add('hidden');
-            nextBtn.classList.add('hidden');
-
-            q.options.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                btn.className = "option-btn w-full p-4 border-2 border-gray-100 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition text-left font-medium text-gray-700";
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(i, btn);
-                optionsDiv.appendChild(btn);
-            });
-        }
-
-        function checkAnswer(selected, btn) {
-            const q = currentQuestions[index];
-            const feedback = document.getElementById('feedback');
-            const allBtns = document.querySelectorAll('.option-btn');
-            
-            allBtns.forEach(b => b.disabled = true);
-            feedback.classList.remove('hidden');
-
-            if (selected === q.correct) {
-                score++;
-                document.getElementById('score').innerText = score;
-                btn.classList.add('border-green-500', 'bg-green-50');
-                feedback.innerText = "সঠিক উত্তর! চমৎকার।";
-                feedback.className = "mt-6 p-3 rounded-lg font-bold bg-green-100 text-green-700";
-            } else {
-                btn.classList.add('border-red-500', 'bg-red-50');
-                allBtns[q.correct].classList.add('border-green-500', 'bg-green-50');
-                feedback.innerText = "ভুল উত্তর। সঠিক ছিল: " + q.options[q.correct];
-                feedback.className = "mt-6 p-3 rounded-lg font-bold bg-red-100 text-red-700";
-            }
-            document.getElementById('next-btn').classList.remove('hidden');
-        }
-
-        function nextQuestion() {
-            index++;
-            if (index < currentQuestions.length) {
-                loadQuestion();
-            } else {
-                document.getElementById('question').innerText = "কুইজ শেষ! আপনার মোট স্কোর: " + score;
-                document.getElementById('options').innerHTML = "";
-                document.getElementById('feedback').classList.add('hidden');
-                document.getElementById('next-btn').classList.add('hidden');
-                document.getElementById('restart-btn').classList.remove('hidden');
-            }
-        }
-
-        startNewSession();
-    </script>
-</body>
-</html>
+const questionBank = [
+    { q: "কম্পিউটারের স্থায়ী স্মৃতি কোনটি?", options: ["ROM", "RAM", "Cache", "Buffer"], correct: 0 },
+    { q: "নিচের কোনটি ইনপুট ডিভাইস?", options: ["Monitor", "Printer", "Keyboard", "Speaker"], correct: 2 },
+    { q: "WWW এর পূর্ণরূপ কী?", options: ["World Wide Web", "World Whole Web", "Wide World Web", "Web Wide World"], correct: 0 },
+    { q: "বাংলাদেশের প্রথম সার্চ ইঞ্জিনের নাম কী?", options: ["চরকি", "পিপীলিকা", "খুঁজুন", "গুগল"], correct: 1 },
+    { q: "১ গিগাবাইট সমান কত মেগাবাইট?", options: ["৫১২ MB", "১০২৪ MB", "১০০০ MB", "২০৪৮ MB"], correct: 1 },
+    { q: "ইমেইলের জনক কে?", options: ["রে টমলিনসন", "বিল গেটস", "স্টিভ জবস", "মার্ক জাকারবার্গ"], correct: 0 },
+    { q: "সবচেয়ে শক্তিশালী কম্পিউটার কোনটি?", options: ["মেইনফ্রেম", "মাইক্রো", "সুপার কম্পিউটার", "মিনি"], correct: 2 },
+    { q: "ফেসবুকের সদর দপ্তর কোথায়?", options: ["ক্যালিফোর্নিয়া", "নিউ ইয়র্ক", "লন্ডন", "টোকিও"], correct: 0 },
+    { q: "আধুনিক কম্পিউটারের জনক কে?", options: ["চার্লস ব্যাবেজ", "অ্যালান টুরিং", "জন ভন নিউম্যান", "স্টিভ ওয়াজনিয়াক"], correct: 1 },
+    { q: "ইউটিউব কত সালে প্রতিষ্ঠিত হয়?", options: ["২০০৩", "২০০৪", "২০০৫", "২০০৬"], correct: 2 },
+    { q: "সিপিইউ (CPU) এর পূর্ণরূপ কী?", options: ["Central Process Unit", "Central Processing Unit", "Control Process Unit", "Core Processing Unit"], correct: 1 },
+    { q: "কম্পিউটারের মস্তিষ্ক বলা হয় কোনটিকে?", options: ["Monitor", "Hard Disk", "ALU", "CPU"], correct: 3 },
+    { q: "নিচের কোনটি আউটপুট ডিভাইস?", options: ["Mouse", "Scanner", "Monitor", "Microphone"], correct: 2 },
+    { q: "১ বাইট সমান কত বিট?", options: ["৪ বিট", "৮ বিট", "১৬ বিট", "৩২ বিট"], correct: 1 },
+    { q: "কম্পিউটার ভাইরাস কি?", options: ["এক ধরনের জীবাণু", "এক ধরনের ক্ষতিকারক সফটওয়্যার", "হার্ডওয়্যার সমস্যা", "বিদ্যুৎ বিভ্রাট"], correct: 1 },
+    { q: "পিডিএফ (PDF) এর পূর্ণরূপ কী?", options: ["Personal Document Format", "Portable Document Format", "Print Document Format", "Page Data Format"], correct: 1 },
+    { q: "ইন্টারনেটের জনক কে?", options: ["উইন্ট সার্ফ", "টিম বার্নার্স লি", "মার্ক জাকারবার্গ", "বিল গেটস"], correct: 0 },
+    { q: "HTTP এর পূর্ণরূপ কী?", options: ["Hypertext Transfer Protocol", "Hypertext Terminal Protocol", "High Transfer Protocol", "Hypertext Transmission Protocol"], correct: 0 },
+    { q: "নিচের কোনটি একটি সার্চ ইঞ্জিন?", options: ["Facebook", "Google", "WhatsApp", "Instagram"], correct: 1 },
+    { q: "বাইনারি সংখ্যা পদ্ধতিতে কয়টি অংক থাকে?", options: ["৫টি", "১০টি", "২টি", "৮টি"], correct: 2 },
+    { q: "RAM এর পূর্ণরূপ কী?", options: ["Read Access Memory", "Random Access Memory", "Run Access Memory", "Rapid Access Memory"], correct: 1 },
+    { q: "ROM এর পূর্ণরূপ কী?", options: ["Read Only Memory", "Run Only Memory", "Random Only Memory", "Real Only Memory"], correct: 0 },
+    { q: "মাউস কোন ধরনের ডিভাইস?", options: ["আউটপুট", "ইনপুট", "স্টোরেজ", "প্রসেসিং"], correct: 1 },
+    { q: "কী-বোর্ডে ফাংশন কী কয়টি থাকে?", options: ["১০টি", "১১টি", "১২টি", "২০টি"], correct: 2 },
+    { q: "সফটওয়্যার মূলত কত প্রকার?", options: ["২ প্রকার", "৩ প্রকার", "৪ প্রকার", "৫ প্রকার"], correct: 0 },
+    { q: "উইন্ডোজ (Windows) কি?", options: ["একটি হার্ডওয়্যার", "একটি অপারেটিং সিস্টেম", "একটি ব্রাউজার", "একটি ভাইরাস"], correct: 1 },
+    { q: "প্রথম প্রজন্মের কম্পিউটারে কি ব্যবহার করা হতো?", options: ["ট্রানজিস্টর", "ভ্যাকুয়াম টিউব", "আইসি", "মাইক্রোপ্রসেসর"], correct: 1 },
+    { q: "কত সালে প্রথম কম্পিউটার প্রোগ্রামিং ভাষা তৈরি হয়?", options: ["১৯৪৫", "১৯৫৭", "১৯৭০", "১৯৮০"], correct: 1 },
+    { q: "USB এর পূর্ণরূপ কী?", options: ["Universal Serial Bus", "United Serial Bus", "Unique Serial Bus", "Union Serial Bus"], correct: 0 },
+    { q: "নিচের কোনটি একটি ব্রাউজার?", options: ["Google", "Chrome", "YouTube", "Gmail"], correct: 1 },
+    { q: "মোবাইল ফোনের জনক কে?", options: ["আলেকজান্ডার গ্রাহাম বেল", "মার্টিন কুপার", "স্টিভ জবস", "টমাস আলভা এডিসন"], correct: 1 },
+    { q: "টুইটারের বর্তমান নাম কী?", options: ["X", "Blue", "Thread", "Sky"], correct: 0 },
+    { q: "ব্লুটুথ কিসের উদাহরণ?", options: ["LAN", "MAN", "PAN", "WAN"], correct: 2 },
+    { q: "ওয়াইফাই (Wi-Fi) এর পূর্ণরূপ কী?", options: ["Wireless Fidelity", "Wireless Find", "Wire Fidelity", "Wireless Fiber"], correct: 0 },
+    { q: "URL এর পূর্ণরূপ কী?", options: ["Uniform Resource Locator", "Unique Resource Locator", "Universal Resource Locator", "Unit Resource Locator"], correct: 0 },
+    { q: "HTML এর পূর্ণরূপ কী?", options: ["Hypertext Markup Language", "Hyperlink Markup Language", "Hightext Markup Language", "Hypertext Mark Language"], correct: 0 },
+    { q: "নিচের কোনটি ডাটাবেজ ভাষা?", options: ["C++", "Java", "SQL", "HTML"], correct: 2 },
+    { q: "প্রিন্ট করার শর্টকাট কমান্ড কোনটি?", options: ["Ctrl + S", "Ctrl + P", "Ctrl + C", "Ctrl + V"], correct: 1 },
+    { q: "কপি করার শর্টকাট কমান্ড কোনটি?", options: ["Ctrl + C", "Ctrl + X", "Ctrl + V", "Ctrl + Z"], correct: 0 },
+    { q: "পেস্ট করার শর্টকাট কমান্ড কোনটি?", options: ["Ctrl + P", "Ctrl + V", "Ctrl + A", "Ctrl + S"], correct: 1 },
+    { q: "সব সিলেক্ট করার শর্টকাট কমান্ড কোনটি?", options: ["Ctrl + S", "Ctrl + A", "Ctrl + D", "Ctrl + F"], correct: 1 },
+    { q: "কম্পিউটার হার্ডওয়্যার কয় প্রকার?", options: ["২ প্রকার", "৩ প্রকার", "৪ প্রকার", "৫ প্রকার"], correct: 1 },
+    { q: "মডেম কি ধরনের ডিভাইস?", options: ["ইনপুট", "আউটপুট", "ইনপুট ও আউটপুট", "কোনটিই নয়"], correct: 2 },
+    { q: "পৃথিবীর প্রথম গণনাকারী যন্ত্রের নাম কী?", options: ["অ্যাবাকাস", "ক্যালকুলেটর", "কম্পিউটার", "ল্যাপটপ"], correct: 0 },
+    { q: "পাসওয়ার্ড কেন ব্যবহার করা হয়?", options: ["গতি বাড়ানোর জন্য", "নিরাপত্তার জন্য", "মেমোরি বাঁচানোর জন্য", "দেখার সুবিধার জন্য"], correct: 1 },
+    { q: "আইপি (IP) অ্যাড্রেস কী?", options: ["ইন্টারনেট প্রটোকল", "ইন্টারনেট প্রোগ্রাম", "ইন্টারনেট পেজ", "ইন্টারনেট পাওয়ার"], correct: 0 },
+    { q: "নিচের কোনটি অ্যান্টিভাইরাস?", options: ["Avast", "Trojan", "Worm", "Spyware"], correct: 0 },
+    { q: "স্মার্টফোনের অপারেটিং সিস্টেম কোনটি?", options: ["Windows", "Android", "Linux", "DOS"], correct: 1 },
+    { q: "মাইক্রোসফটের প্রতিষ্ঠাতা কে?", options: ["বিল গেটস", "মার্ক জাকারবার্গ", "জ্যাক মা", "ল্যারি পেজ"], correct: 0 },
+    { q: "অপারেটিং সিস্টেম নয় কোনটি?", options: ["Windows", "Linux", "MS Office", "macOS"], correct: 2 },
+    { q: "LAN এর পূর্ণরূপ কী?", options: ["Local Area Network", "Long Area Network", "Light Area Network", "Land Area Network"], correct: 0 },
+    { q: "WAN এর পূর্ণরূপ কী?", options: ["Wide Area Network", "World Area Network", "Wifi Area Network", "Web Area Network"], correct: 0 },
+    { q: "LCD এর পূর্ণরূপ কী?", options: ["Liquid Crystal Display", "Light Crystal Display", "Liquid Color Display", "Light Color Display"], correct: 0 },
+    { q: "কম্পিউটার চালু হওয়ার প্রক্রিয়াকে কী বলে?", options: ["Starting", "Booting", "Loading", "Refreshing"], correct: 1 },
+    { q: "নিচের কোনটি প্রোগ্রামিং ল্যাঙ্গুয়েজ?", options: ["MS Word", "Python", "Excel", "PowerPoint"], correct: 1 },
+    { q: "বিনা মূল্যের অপারেটিং সিস্টেম কোনটি?", options: ["Windows", "Linux", "macOS", "iOS"], correct: 1 },
+    { q: "অ্যাডোবি ফটোশপ কী ধরনের সফটওয়্যার?", options: ["গ্রাফিক্স", "ওয়ার্ড প্রসেসিং", "ডাটাবেজ", "স্প্রেডশিট"], correct: 0 },
+    { q: "এক্সেল (Excel) কী ধরনের সফটওয়্যার?", options: ["স্প্রেডশিট", "প্রেজেন্টেশন", "গ্রাফিক্স", "অ্যান্টিভাইরাস"], correct: 0 },
+    { q: "ইন্টারনেটের মাধ্যমে কেনাবেচাকে কী বলে?", options: ["E-mail", "E-commerce", "E-learning", "E-banking"], correct: 1 },
+    { q: "১ টেরাবাইট সমান কত গিগাবাইট?", options: ["১০২৪ GB", "৫১২ GB", "১০০০ GB", "২০৪৮ GB"], correct: 0 },
+    { q: "প্রথম মাইক্রোপ্রসেসর কত সালে তৈরি হয়?", options: ["১৯৭১", "১৯৮০", "১৯৯০", "১৯৬০"], correct: 0 },
+    { q: "সুপার কম্পিউটারের গতি মাপা হয় কিসে?", options: ["FLOPS", "MIPS", "BIPS", "LIPS"], correct: 0 },
+    { q: "কি-বোর্ডে কয়টি অল্টার (Alt) কি থাকে?", options: ["১টি", "২টি", "৩টি", "৪টি"], correct: 1 },
+    { q: "নিচের কোনটি স্টোরেজ ডিভাইস?", options: ["Monitor", "Hard Disk", "Printer", "Keyboard"], correct: 1 },
+    { q: "BIOS এর পূর্ণরূপ কী?", options: ["Basic Input Output System", "Basic Internal Output System", "Binary Input Output System", "Basic Input Online System"], correct: 0 },
+    { q: "ফ্লপি ডিস্কের ধারণক্ষমতা কত?", options: ["1.44 MB", "100 MB", "1 GB", "700 MB"], correct: 0 },
+    { q: "নিচের কোনটি ডাটাবেজ সফটওয়্যার?", options: ["Oracle", "Photoshop", "Chrome", "PowerPoint"], correct: 0 },
+    { q: "কি-বোর্ডের সবচেয়ে লম্বা কী কোনটি?", options: ["Enter", "Shift", "Space bar", "Caps Lock"], correct: 2 },
+    { q: "ইন্টারনেট ব্রাউজ করার জন্য কোনটি প্রয়োজন?", options: ["প্রিন্টার", "ব্রাউজার", "স্ক্যানার", "স্পিকার"], correct: 1 },
+    { q: "সবচেয়ে জনপ্রিয় সামাজিক যোগাযোগ মাধ্যম কোনটি?", options: ["Twitter", "Facebook", "LinkedIn", "Instagram"], correct: 1 },
+    { q: "আইফোন (iPhone) কোন কোম্পানির পণ্য?", options: ["Samsung", "Apple", "Google", "Microsoft"], correct: 1 },
+    { q: "কম্পিউটারের জনক কে?", options: ["চার্লস ব্যাবেজ", "বিল গেটস", "আইজ্যাক নিউটন", "টমাস এডিসন"], correct: 0 },
+    { q: "মডেমের কাজ কী?", options: ["তথ্য প্রিন্ট করা", "তথ্য আদান-প্রদান করা", "ছবি তোলা", "গান শোনা"], correct: 1 },
+    { q: "সিডি (CD) এর পূর্ণরূপ কী?", options: ["Compact Disk", "Color Disk", "Core Disk", "Common Disk"], correct: 0 },
+    { q: "ওয়াইম্যাক্স (WiMAX) কিসের উদাহরণ?", options: ["LAN", "MAN", "PAN", "WAN"], correct: 1 },
+    { q: "নিচের কোনটি নেটওয়ার্ক টপোলজি?", options: ["Star", "Moon", "Sun", "Cloud"], correct: 0 },
+    { q: "১ নিবল (Nibble) সমান কত বিট?", options: ["২ বিট", "৪ বিট", "৮ বিট", "১৬ বিট"], correct: 1 },
+    { q: "প্রথম কম্পিউটার গেম কোনটি?", options: ["Spacewar", "Tetris", "Mario", "Snake"], correct: 0 },
+    { q: "গুগলের সদর দপ্তর কোথায়?", options: ["ওয়াশিংটন", "ক্যালিফোর্নিয়া", "শিকাগো", "ফ্লোরিডা"], correct: 1 },
+    { q: "নিচের কোনটি হাই-লেভেল ল্যাঙ্গুয়েজ?", options: ["C++", "Machine Code", "Assembly", "Binary"], correct: 0 },
+    { q: "ডোমেইন নাম কী?", options: ["ব্যক্তির নাম", "ওয়েবসাইটের ঠিকানা", "ফাইলের নাম", "পাসওয়ার্ড"], correct: 1 },
+    { q: "ASCII কোড কত বিটের?", options: ["৪", "৮", "১৬", "৩২"], correct: 1 },
+    { q: "তথ্য ও যোগাযোগ প্রযুক্তির সংক্ষিপ্ত রূপ কী?", options: ["IT", "ICT", "IS", "IP"], correct: 1 },
+    { q: "কম্পিউটারের হার্ট বলা হয় কোনটিকে?", options: ["Motherboard", "CPU", "Monitor", "Power Supply"], correct: 1 },
+    { q: "১ কিলোবাইট সমান কত বাইট?", options: ["১০০০ বাইট", "১০২৪ বাইট", "৫১২ বাইট", "২০৪৮ বাইট"], correct: 1 },
+    { q: "ইন্টারনেট সংযোগের জন্য কোনটি অত্যাবশ্যক?", options: ["মাউস", "মডেম", "প্রিন্টার", "পেনড্রাইভ"], correct: 1 },
+    { q: "টেলিগ্রাম অ্যাপটি কোন দেশের তৈরি?", options: ["যুক্তরাষ্ট্র", "রাশিয়া", "চীন", "ভারত"], correct: 1 },
+    { q: "ইমেইল ঠিকানায় @ চিহ্নের পরের অংশকে কী বলে?", options: ["ইউজারনেম", "ডোমেইন নেম", "প্রটোকল", "আইপি"], correct: 1 },
+    { q: "সবচেয়ে দ্রুত গতির প্রিন্টার কোনটি?", options: ["ইঙ্কজেট", "ডট ম্যাট্রিক্স", "লেজার", "থার্মাল"], correct: 2 },
+    { q: "চ্যাটজিপিটি (ChatGPT) কী?", options: ["একটি গেম", "একটি এআই চ্যাটবট", "একটি ব্রাউজার", "একটি অপারেটিং সিস্টেম"], correct: 1 },
+    { q: "প্রথম মেকানিক্যাল ক্যালকুলেটর তৈরি করেন কে?", options: ["প্যাসকেল", "নিউটন", "ব্যাবেজ", "লাইবনিজ"], correct: 0 },
+    { q: "অপারেটিং সিস্টেমের কাজ কী?", options: ["গেম খেলা", "হার্ডওয়্যার ও সফটওয়্যারের সমন্বয়", "গান শোনা", "টাইপ করা"], correct: 1 },
+    { q: "বিটকয়েন কী?", options: ["কাগজের মুদ্রা", "ভার্চুয়াল মুদ্রা", "একটি ব্যাংক", "একটি সফটওয়্যার"], correct: 1 },
+    { q: "ইন্টারনেটে সার্চ করার জন্য ব্যবহৃত সফটওয়্যার কোনটি?", options: ["MS Word", "Chrome", "Photoshop", "VLC"], correct: 1 },
+    { q: "কুইক রেসপন্স কোড এর সংক্ষিপ্ত রূপ কী?", options: ["QC", "QR", "RC", "CR"], correct: 1 },
+    { q: "কম্পিউটারের মেমোরি কয় প্রকার?", options: ["২ প্রকার", "৩ প্রকার", "৪ প্রকার", "৫ প্রকার"], correct: 0 },
+    { q: "ল্যাপটপ কে উদ্ভাবন করেন?", options: ["বিল মোগারিজ", "স্টিভ জবস", "বিল গেটস", "জ্যাক মা"], correct: 0 },
+    { q: "ইউনিকোড কত বিটের?", options: ["৮", "১৬", "৩২", "৬৪"], correct: 1 },
+    { q: "প্রথম টাচ স্ক্রিন ফোন তৈরি করে কোন কোম্পানি?", options: ["Nokia", "IBM", "Apple", "Samsung"], correct: 1 },
+    { q: "কম্পিউটার স্ক্রিনের প্রতিটি বিন্দুকে কী বলে?", options: ["Dot", "Pixel", "Point", "Spot"], correct: 1 }
+];
