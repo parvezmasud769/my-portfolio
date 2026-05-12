@@ -26,7 +26,6 @@
                     <option value="ict">তথ্য ও যোগাযোগ প্রযুক্তি (ICT)</option>
                     <option value="gk">সাধারণ জ্ঞান (GK)</option>
                 </select>
-                <p class="text-sm text-indigo-400 text-center">*প্রতিটি কুইজে ১০টি করে প্রশ্ন থাকবে।</p>
             </div>
             <button onclick="startQuiz()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-xl hover:bg-indigo-700 transition shadow-lg active:scale-95">কুইজ শুরু করুন</button>
         </div>
@@ -38,17 +37,15 @@
 
             <div class="flex justify-between mb-6 text-sm font-bold">
                 <span class="text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full">প্রশ্ন: <span id="q-count">0</span>/১০</span>
-                <span class="text-red-500 bg-red-50 px-3 py-1 rounded-full">সময়: <span id="timer-text">১৫</span> সেকেন্ড</span>
+                <span id="timer-display" class="text-red-500 bg-red-50 px-3 py-1 rounded-full">সময়: <span id="timer-text">১৫</span> সে.</span>
                 <span class="text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full">স্কোর: <span id="score">0</span></span>
             </div>
             
             <div id="question" class="text-xl font-bold mb-8 text-gray-800 text-left leading-relaxed min-h-[80px]"></div>
-            
             <div id="options" class="space-y-4"></div>
-            
             <div id="feedback" class="mt-6 p-4 rounded-xl font-bold hidden"></div>
             
-            <button id="next-btn" onclick="loadNext()" class="mt-8 bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold w-full hidden shadow-lg uppercase">পরবর্তী প্রশ্ন</button>
+            <button id="next-btn" onclick="loadNextManual()" class="mt-8 bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold w-full hidden shadow-lg uppercase transition-all active:scale-95">পরবর্তী প্রশ্ন</button>
         </div>
         
         <div id="result-card" class="hidden">
@@ -74,23 +71,22 @@
         let score = 0;
         let timeLeft = 15;
         let timerInterval;
+        let autoNextTimeout;
+        let countdownInterval;
 
         function startQuiz() {
             const subject = document.getElementById('subject-select').value;
-            
             try {
                 if (subject === 'bangla') selectedQuestions = banglaQuestions;
                 else if (subject === 'ict') selectedQuestions = ictQuestions;
                 else if (subject === 'gk') selectedQuestions = gkQuestions;
 
-                // ১০টি রেন্ডম প্রশ্ন বাছাই
                 selectedQuestions = [...selectedQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
-                
                 document.getElementById('setup-area').classList.add('hidden');
                 document.getElementById('quiz-area').classList.remove('hidden');
                 loadQuestion();
             } catch (e) {
-                alert("এরর: আপনার সাবজেক্ট ফাইলটি খুঁজে পাওয়া যায়নি। গিটহাবে .js ফাইলগুলো আছে কি না চেক করুন।");
+                alert("এরর: .js ফাইলটি পাওয়া যায়নি!");
             }
         }
 
@@ -106,6 +102,7 @@
             optionsDiv.innerHTML = "";
             feedback.classList.add('hidden');
             nextBtn.classList.add('hidden');
+            nextBtn.innerText = "পরবর্তী প্রশ্ন";
 
             q.options.forEach((opt, i) => {
                 const btn = document.createElement('button');
@@ -115,23 +112,21 @@
                 optionsDiv.appendChild(btn);
             });
 
-            startTimer(); // টাইমার শুরু
+            startTimer();
         }
 
         function startTimer() {
             timeLeft = 15;
             const timerBar = document.getElementById('timer-bar');
             const timerText = document.getElementById('timer-text');
-            
             clearInterval(timerInterval);
-            timerText.innerText = timeLeft;
             timerBar.style.width = "100%";
+            timerText.innerText = timeLeft;
 
             timerInterval = setInterval(() => {
                 timeLeft--;
                 timerText.innerText = timeLeft;
                 timerBar.style.width = (timeLeft / 15 * 100) + "%";
-
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     handleTimeOut();
@@ -139,24 +134,12 @@
             }, 1000);
         }
 
-        function handleTimeOut() {
-            const q = selectedQuestions[index];
-            const feedback = document.getElementById('feedback');
-            const btns = document.querySelectorAll('.option-btn');
-            
-            btns.forEach(b => b.disabled = true);
-            feedback.classList.remove('hidden');
-            feedback.innerText = "সময় শেষ! সঠিক উত্তর: " + q.options[q.correct];
-            feedback.className = "mt-6 p-4 rounded-xl font-bold bg-yellow-100 text-yellow-700 text-center";
-            
-            document.getElementById('next-btn').classList.remove('hidden');
-        }
-
         function checkAnswer(selected, btn) {
-            clearInterval(timerInterval); // টাইমার থামানো
+            clearInterval(timerInterval);
             const q = selectedQuestions[index];
             const feedback = document.getElementById('feedback');
             const btns = document.querySelectorAll('.option-btn');
+            const nextBtn = document.getElementById('next-btn');
             
             btns.forEach(b => b.disabled = true);
             feedback.classList.remove('hidden');
@@ -165,15 +148,42 @@
                 score++;
                 document.getElementById('score').innerText = score;
                 btn.classList.add('bg-green-50', 'border-green-500', 'text-green-700');
-                feedback.innerText = "সঠিক উত্তর!";
-                feedback.className = "mt-6 p-4 rounded-xl font-bold bg-green-100 text-green-700 text-center animate-bounce";
+                feedback.innerText = "সঠিক উত্তর! পরবর্তী প্রশ্নে যাচ্ছি...";
+                feedback.className = "mt-6 p-4 rounded-xl font-bold bg-green-100 text-green-700 text-center animate-pulse";
+                
+                // সঠিক হলে ১ সেকেন্ড পর অটো নেক্সট
+                autoNextTimeout = setTimeout(loadNext, 1200);
             } else {
                 btn.classList.add('bg-red-50', 'border-red-500', 'text-red-700');
                 btns[q.correct].classList.add('bg-green-50', 'border-green-500', 'text-green-700');
-                feedback.innerText = "ভুল! সঠিক উত্তর: " + q.options[q.correct];
+                feedback.innerText = "ভুল উত্তর!";
                 feedback.className = "mt-6 p-4 rounded-xl font-bold bg-red-100 text-red-700 text-center";
+                
+                // ভুল হলে ৫ সেকেন্ড কাউন্টডাউন
+                nextBtn.classList.remove('hidden');
+                let count = 5;
+                nextBtn.innerText = `${count} সেকেন্ড পর পরবর্তী প্রশ্ন...`;
+                
+                countdownInterval = setInterval(() => {
+                    count--;
+                    nextBtn.innerText = `${count} সেকেন্ড পর পরবর্তী প্রশ্ন...`;
+                    if (count <= 0) {
+                        clearInterval(countdownInterval);
+                        loadNext();
+                    }
+                }, 1000);
             }
-            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function handleTimeOut() {
+            checkAnswer(-1, null); // সময় শেষ হলে ভুলের লজিক কাজ করবে
+        }
+
+        function loadNextManual() {
+            // ইউজার নিজে ক্লিক করলে সব টাইমার ক্লিয়ার হবে
+            clearTimeout(autoNextTimeout);
+            clearInterval(countdownInterval);
+            loadNext();
         }
 
         function loadNext() {
@@ -188,19 +198,15 @@
         function showResult() {
             document.getElementById('quiz-area').classList.add('hidden');
             document.getElementById('result-card').classList.remove('hidden');
-            
-            // হাই স্কোর সেভ করা (লোকাল স্টোরেজ)
             const subject = document.getElementById('subject-select').value;
             let highScoreKey = "highScore_" + subject;
             let currentHighScore = localStorage.getItem(highScoreKey) || 0;
-
             if (score > currentHighScore) {
                 localStorage.setItem(highScoreKey, score);
                 currentHighScore = score;
             }
-
             document.getElementById('final-score').innerText = "আপনার স্কোর: " + score + " / " + selectedQuestions.length;
-            document.getElementById('high-score').innerText = "এই বিষয়ে আপনার সেরা স্কোর: " + currentHighScore;
+            document.getElementById('high-score').innerText = "সেরা স্কোর: " + currentHighScore;
         }
     </script>
 </body>
