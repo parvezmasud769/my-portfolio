@@ -2,74 +2,88 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>প্রফেশনাল কুইজ মাস্টার</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
     
     <style>
         body { 
-            /* ২. ফন্ট ফ্যামিলি আপডেট */
             font-family: 'Hind Siliguri', sans-serif; 
             background-color: #f0f2f5; 
             -webkit-font-smoothing: antialiased;
+            overflow: hidden; /* পুরো বডির স্ক্রল বন্ধ */
         }
         .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
         .progress-bar { transition: width 1s linear; }
         
-        /* প্রশ্নের ফন্টকে আরও স্পষ্ট করার জন্য */
-        #question {
-            line-height: 1.5;
-            font-weight: 700;
+        /* কুইজ কার্ডটি যাতে স্ক্রিনের ভেতরেই থাকে */
+        .quiz-container {
+            max-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* অপশন বাটনের সাইজ মোবাইলে কিছুটা ছোট করা */
+        @media (max-width: 640px) {
+            .option-btn {
+                padding: 0.75rem 1rem !important;
+                font-size: 0.95rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+            h1 { font-size: 1.5rem !important; }
+            #question { font-size: 1.1rem !important; margin-bottom: 1rem !important; }
         }
     </style>
 </head>
-<body class="p-4 md:p-10">
+<body class="flex items-center justify-center min-h-screen p-2 md:p-6">
 
-    <div class="max-w-2xl mx-auto bg-white p-6 md:p-10 rounded-3xl shadow-2xl text-center relative overflow-hidden">
-        <h1 class="text-3xl font-bold mb-2 text-indigo-600">কুইজ মাস্টার</h1>
-        <p class="text-gray-500 mb-8 border-b pb-4">নিজেকে যাচাই করুন</p>
+    <div class="quiz-container w-full max-w-xl mx-auto bg-white p-5 md:p-8 rounded-2xl shadow-2xl text-center relative">
+        <h1 class="text-2xl font-bold mb-1 text-indigo-600">কুইজ মাস্টার</h1>
+        <p class="text-xs text-gray-400 mb-4 border-b pb-2">নিজেকে যাচাই করুন</p>
 
         <div id="setup-area">
-            <div class="bg-indigo-50 p-6 rounded-2xl mb-6 text-left">
-                <label class="block mb-4 text-lg font-semibold text-indigo-900">একটি বিষয় পছন্দ করুন:</label>
-                <select id="subject-select" class="w-full p-4 border-2 border-indigo-200 rounded-xl mb-4 text-lg focus:border-indigo-500 outline-none transition-all">
+            <div class="bg-indigo-50 p-4 rounded-xl mb-4 text-left">
+                <label class="block mb-2 text-md font-semibold text-indigo-900">বিষয় পছন্দ করুন:</label>
+                <select id="subject-select" class="w-full p-3 border-2 border-indigo-100 rounded-lg text-md focus:border-indigo-500 outline-none">
                     <option value="bangla">বাংলা সাহিত্য ও ভাষা</option>
-                    <option value="ict">তথ্য ও যোগাযোগ প্রযুক্তি (ICT)</option>
+                    <option value="ict">তথ্য ও যোগাযোগ প্রযুক্তি</option>
                     <option value="gk">সাধারণ জ্ঞান (GK)</option>
                 </select>
             </div>
-            <button onclick="startQuiz()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-xl hover:bg-indigo-700 transition shadow-lg active:scale-95">কুইজ শুরু করুন</button>
+            <button onclick="startQuiz()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-indigo-700 transition active:scale-95">শুরু করুন</button>
         </div>
 
         <div id="quiz-area" class="hidden">
-            <div class="w-full bg-gray-200 h-2 rounded-full mb-6">
-                <div id="timer-bar" class="progress-bar bg-red-500 h-2 rounded-full" style="width: 100%;"></div>
+            <div class="w-full bg-gray-200 h-1.5 rounded-full mb-4">
+                <div id="timer-bar" class="progress-bar bg-red-500 h-1.5 rounded-full" style="width: 100%;"></div>
             </div>
 
-            <div class="flex justify-between mb-6 text-sm font-bold">
-                <span class="text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full">প্রশ্ন: <span id="q-count">0</span>/১০</span>
-                <span id="timer-display" class="text-red-500 bg-red-50 px-3 py-1 rounded-full">সময়: <span id="timer-text">১৫</span> সে.</span>
-                <span class="text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full">স্কোর: <span id="score">0</span></span>
+            <div class="flex justify-between mb-4 text-xs font-bold">
+                <span class="text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">প্রশ্ন: <span id="q-count">0</span>/১০</span>
+                <span id="timer-display" class="text-red-600 bg-red-50 px-2 py-1 rounded-md">সময়: <span id="timer-text">১৫</span>s</span>
+                <span class="text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">স্কোর: <span id="score">0</span></span>
             </div>
             
-            <div id="question" class="text-xl font-bold mb-8 text-gray-800 text-left leading-relaxed min-h-[80px]"></div>
-            <div id="options" class="space-y-4"></div>
-            <div id="feedback" class="mt-6 p-4 rounded-xl font-bold hidden"></div>
+            <div id="question" class="text-lg font-bold mb-4 text-gray-800 text-left leading-tight min-h-[50px]"></div>
+            <div id="options" class="grid grid-cols-1 gap-2"></div>
             
-            <button id="next-btn" onclick="loadNextManual()" class="mt-8 bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold w-full hidden shadow-lg uppercase transition-all active:scale-95">পরবর্তী প্রশ্ন</button>
+            <div id="feedback" class="mt-3 p-2 text-sm rounded-lg font-bold hidden"></div>
+            
+            <button id="next-btn" onclick="loadNextManual()" class="mt-4 bg-indigo-600 text-white py-3 rounded-xl font-bold w-full hidden shadow-md active:scale-95">পরবর্তী প্রশ্ন</button>
         </div>
         
         <div id="result-card" class="hidden">
-            <div class="py-10">
-                <div class="text-6xl mb-6">🎉</div>
-                <h2 class="text-3xl font-bold mb-2 text-gray-800">কুইজ সম্পন্ন!</h2>
-                <div class="bg-gray-50 p-6 rounded-2xl my-6 border-2 border-dashed border-indigo-200">
-                    <p id="final-score" class="text-2xl font-bold text-indigo-600 mb-2"></p>
-                    <p id="high-score" class="text-gray-500 font-semibold"></p>
+            <div class="py-4">
+                <div class="text-4xl mb-2">🎉</div>
+                <h2 class="text-xl font-bold mb-1 text-gray-800">কুইজ সম্পন্ন!</h2>
+                <div class="bg-gray-50 p-4 rounded-xl my-4 border border-dashed border-indigo-200">
+                    <p id="final-score" class="text-lg font-bold text-indigo-600"></p>
+                    <p id="high-score" class="text-xs text-gray-500 font-semibold mt-1"></p>
                 </div>
-                <button onclick="startQuiz()" class="bg-indigo-600 text-white px-12 py-4 rounded-xl font-bold w-full hover:bg-indigo-700 transition shadow-md active:scale-95 mb-4">আবার খেলুন (নতুন প্রশ্ন)</button>
-                <button onclick="location.reload()" class="text-indigo-600 font-bold border-2 border-indigo-600 px-12 py-4 rounded-xl w-full hover:bg-indigo-50 transition">শুরুতে ফিরে যান</button>
+                <button onclick="startQuiz()" class="bg-indigo-600 text-white py-3 rounded-xl font-bold w-full mb-2">আবার খেলুন</button>
+                <button onclick="location.reload()" class="text-indigo-600 font-bold text-sm py-2 w-full hover:underline">হোমে ফিরে যান</button>
             </div>
         </div>
     </div>
@@ -87,16 +101,11 @@
         let autoNextTimeout;
         let countdownInterval;
 
-        let answeredQuestions = {
-            bangla: [],
-            ict: [],
-            gk: []
-        };
+        let answeredQuestions = { bangla: [], ict: [], gk: [] };
 
         function startQuiz() {
             const subject = document.getElementById('subject-select').value;
             let allQuestions = [];
-
             document.getElementById('setup-area').classList.add('hidden');
             document.getElementById('result-card').classList.add('hidden');
             
@@ -106,7 +115,6 @@
                 else if (subject === 'gk') allQuestions = gkQuestions;
 
                 let newQuestions = allQuestions.filter(q => !answeredQuestions[subject].includes(q.q));
-
                 if (newQuestions.length < 10) {
                     answeredQuestions[subject] = [];
                     newQuestions = allQuestions;
@@ -116,20 +124,16 @@
                 selectedQuestions.forEach(q => answeredQuestions[subject].push(q.q));
 
                 document.getElementById('quiz-area').classList.remove('hidden');
-                index = 0;
-                score = 0;
+                index = 0; score = 0;
                 document.getElementById('score').innerText = score;
                 loadQuestion();
-            } catch (e) {
-                alert("এরর: ডেটা ফাইল লোড হতে সমস্যা হয়েছে!");
-            }
+            } catch (e) { alert("ডেটা লোড এরর!"); }
         }
 
         function loadQuestion() {
             const q = selectedQuestions[index];
             document.getElementById('q-count').innerText = index + 1;
             document.getElementById('question').innerText = q.q;
-            
             const optionsDiv = document.getElementById('options');
             const feedback = document.getElementById('feedback');
             const nextBtn = document.getElementById('next-btn');
@@ -140,12 +144,11 @@
 
             q.options.forEach((opt, i) => {
                 const btn = document.createElement('button');
-                btn.className = "option-btn w-full p-4 border-2 border-gray-100 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition text-left font-semibold text-gray-700 shadow-sm";
+                btn.className = "option-btn w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-indigo-50 transition font-medium text-gray-700";
                 btn.innerText = opt;
                 btn.onclick = () => checkAnswer(i, btn);
                 optionsDiv.appendChild(btn);
             });
-
             startTimer();
         }
 
@@ -156,15 +159,11 @@
             clearInterval(timerInterval);
             timerBar.style.width = "100%";
             timerText.innerText = timeLeft;
-
             timerInterval = setInterval(() => {
                 timeLeft--;
                 timerText.innerText = timeLeft;
                 timerBar.style.width = (timeLeft / 15 * 100) + "%";
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    handleTimeOut();
-                }
+                if (timeLeft <= 0) { clearInterval(timerInterval); handleTimeOut(); }
             }, 1000);
         }
 
@@ -174,55 +173,38 @@
             const feedback = document.getElementById('feedback');
             const btns = document.querySelectorAll('.option-btn');
             const nextBtn = document.getElementById('next-btn');
-            
             btns.forEach(b => b.disabled = true);
             feedback.classList.remove('hidden');
 
             if (selected === q.correct) {
                 score++;
                 document.getElementById('score').innerText = score;
-                btn.classList.add('bg-green-50', 'border-green-500', 'text-green-700');
-                feedback.innerText = "সঠিক উত্তর! পরবর্তী প্রশ্নে যাচ্ছি...";
-                feedback.className = "mt-6 p-4 rounded-xl font-bold bg-green-100 text-green-700 text-center animate-pulse";
-                autoNextTimeout = setTimeout(loadNext, 1200);
+                btn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                feedback.innerText = "সঠিক উত্তর!";
+                feedback.className = "mt-3 p-2 rounded-lg font-bold bg-green-50 text-green-700 text-center text-xs";
+                autoNextTimeout = setTimeout(loadNext, 1000);
             } else {
-                if(btn) btn.classList.add('bg-red-50', 'border-red-500', 'text-red-700');
-                btns[q.correct].classList.add('bg-green-50', 'border-green-500', 'text-green-700');
+                if(btn) btn.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                btns[q.correct].classList.add('bg-green-100', 'border-green-500', 'text-green-800');
                 feedback.innerText = "ভুল উত্তর!";
-                feedback.className = "mt-6 p-4 rounded-xl font-bold bg-red-100 text-red-700 text-center";
-                
+                feedback.className = "mt-3 p-2 rounded-lg font-bold bg-red-50 text-red-700 text-center text-xs";
                 nextBtn.classList.remove('hidden');
-                let count = 5;
-                nextBtn.innerText = `${count} সেকেন্ড পর পরবর্তী প্রশ্ন...`;
-                
+                let count = 4;
+                nextBtn.innerText = `${count}s পর পরবর্তী প্রশ্ন`;
                 countdownInterval = setInterval(() => {
                     count--;
-                    nextBtn.innerText = `${count} সেকেন্ড পর পরবর্তী প্রশ্ন...`;
-                    if (count <= 0) {
-                        clearInterval(countdownInterval);
-                        loadNext();
-                    }
+                    nextBtn.innerText = `${count}s পর পরবর্তী প্রশ্ন`;
+                    if (count <= 0) { clearInterval(countdownInterval); loadNext(); }
                 }, 1000);
             }
         }
 
-        function handleTimeOut() {
-            checkAnswer(-1, null);
-        }
-
-        function loadNextManual() {
-            clearTimeout(autoNextTimeout);
-            clearInterval(countdownInterval);
-            loadNext();
-        }
-
+        function handleTimeOut() { checkAnswer(-1, null); }
+        function loadNextManual() { clearTimeout(autoNextTimeout); clearInterval(countdownInterval); loadNext(); }
         function loadNext() {
             index++;
-            if (index < selectedQuestions.length) {
-                loadQuestion();
-            } else {
-                showResult();
-            }
+            if (index < selectedQuestions.length) loadQuestion();
+            else showResult();
         }
 
         function showResult() {
@@ -231,11 +213,8 @@
             const subject = document.getElementById('subject-select').value;
             let highScoreKey = "highScore_" + subject;
             let currentHighScore = localStorage.getItem(highScoreKey) || 0;
-            if (score > currentHighScore) {
-                localStorage.setItem(highScoreKey, score);
-                currentHighScore = score;
-            }
-            document.getElementById('final-score').innerText = "আপনার স্কোর: " + score + " / " + selectedQuestions.length;
+            if (score > currentHighScore) { localStorage.setItem(highScoreKey, score); currentHighScore = score; }
+            document.getElementById('final-score').innerText = "স্কোর: " + score + " / " + selectedQuestions.length;
             document.getElementById('high-score').innerText = "সেরা স্কোর: " + currentHighScore;
         }
     </script>
