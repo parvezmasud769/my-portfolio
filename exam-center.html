@@ -20,7 +20,7 @@
 
         <div id="setup-area">
             <div class="bg-indigo-50 p-6 rounded-2xl mb-6 text-left">
-                <label class="block mb-4 text-lg font-semibold text-indigo-900">একটি বিষয় পছন্দ করুন:</label>
+                <label class="block mb-4 text-lg font-semibold text-indigo-900">একটি বিষয় পছন্দ করুন:</label>
                 <select id="subject-select" class="w-full p-4 border-2 border-indigo-200 rounded-xl mb-4 text-lg focus:border-indigo-500 outline-none transition-all">
                     <option value="bangla">বাংলা সাহিত্য ও ভাষা</option>
                     <option value="ict">তথ্য ও যোগাযোগ প্রযুক্তি (ICT)</option>
@@ -37,7 +37,7 @@
 
             <div class="flex justify-between mb-6 text-sm font-bold">
                 <span class="text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full">প্রশ্ন: <span id="q-count">0</span>/১০</span>
-                <span id="timer-display" class="text-red-500 bg-red-50 px-3 py-1 rounded-full">সময়: <span id="timer-text">১৫</span> সে.</span>
+                <span id="timer-display" class="text-red-500 bg-red-50 px-3 py-1 rounded-full">সময়: <span id="timer-text">১৫</span> সে.</span>
                 <span class="text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full">স্কোর: <span id="score">0</span></span>
             </div>
             
@@ -56,7 +56,8 @@
                     <p id="final-score" class="text-2xl font-bold text-indigo-600 mb-2"></p>
                     <p id="high-score" class="text-gray-500 font-semibold"></p>
                 </div>
-                <button onclick="location.reload()" class="bg-indigo-600 text-white px-12 py-4 rounded-xl font-bold w-full hover:bg-indigo-700 transition shadow-md active:scale-95">আবার চেষ্টা করুন</button>
+                <button onclick="startQuiz()" class="bg-indigo-600 text-white px-12 py-4 rounded-xl font-bold w-full hover:bg-indigo-700 transition shadow-md active:scale-95 mb-4">আবার খেলুন (নতুন প্রশ্ন)</button>
+                <button onclick="location.reload()" class="text-indigo-600 font-bold border-2 border-indigo-600 px-12 py-4 rounded-xl w-full hover:bg-indigo-50 transition">শুরুতে ফিরে যান</button>
             </div>
         </div>
     </div>
@@ -74,19 +75,48 @@
         let autoNextTimeout;
         let countdownInterval;
 
+        // ট্র্যাকিং সিস্টেম: কোন সাবজেক্টে কোন প্রশ্ন দেখা হয়েছে তা মনে রাখবে
+        let answeredQuestions = {
+            bangla: [],
+            ict: [],
+            gk: []
+        };
+
         function startQuiz() {
             const subject = document.getElementById('subject-select').value;
-            try {
-                if (subject === 'bangla') selectedQuestions = banglaQuestions;
-                else if (subject === 'ict') selectedQuestions = ictQuestions;
-                else if (subject === 'gk') selectedQuestions = gkQuestions;
+            let allQuestions = [];
 
-                selectedQuestions = [...selectedQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
-                document.getElementById('setup-area').classList.add('hidden');
+            // রেজাল্ট কার্ড বা সেটআপ এরিয়া হাইড করা
+            document.getElementById('setup-area').classList.add('hidden');
+            document.getElementById('result-card').classList.add('hidden');
+            
+            try {
+                if (subject === 'bangla') allQuestions = banglaQuestions;
+                else if (subject === 'ict') allQuestions = ictQuestions;
+                else if (subject === 'gk') allQuestions = gkQuestions;
+
+                // নতুন লজিক: আগে দেখানো হয়নি এমন প্রশ্নগুলো ফিল্টার করা
+                let newQuestions = allQuestions.filter(q => !answeredQuestions[subject].includes(q.q));
+
+                // যদি নতুন প্রশ্ন ১০টির কম থাকে, তবে মেমোরি রিসেট হবে (সব প্রশ্ন একবার দেখা শেষ হলে)
+                if (newQuestions.length < 10) {
+                    answeredQuestions[subject] = [];
+                    newQuestions = allQuestions;
+                }
+
+                // র‍্যান্ডম ১০টি নতুন প্রশ্ন নেওয়া
+                selectedQuestions = [...newQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
+
+                // দেখা হয়েছে এমন লিস্টে প্রশ্নগুলো যোগ করা
+                selectedQuestions.forEach(q => answeredQuestions[subject].push(q.q));
+
                 document.getElementById('quiz-area').classList.remove('hidden');
+                index = 0;
+                score = 0;
+                document.getElementById('score').innerText = score;
                 loadQuestion();
             } catch (e) {
-                alert("এরর: .js ফাইলটি পাওয়া যায়নি!");
+                alert("এরর: ডেটা ফাইল লোড হতে সমস্যা হয়েছে!");
             }
         }
 
@@ -102,7 +132,6 @@
             optionsDiv.innerHTML = "";
             feedback.classList.add('hidden');
             nextBtn.classList.add('hidden');
-            nextBtn.innerText = "পরবর্তী প্রশ্ন";
 
             q.options.forEach((opt, i) => {
                 const btn = document.createElement('button');
@@ -150,16 +179,13 @@
                 btn.classList.add('bg-green-50', 'border-green-500', 'text-green-700');
                 feedback.innerText = "সঠিক উত্তর! পরবর্তী প্রশ্নে যাচ্ছি...";
                 feedback.className = "mt-6 p-4 rounded-xl font-bold bg-green-100 text-green-700 text-center animate-pulse";
-                
-                // সঠিক হলে ১ সেকেন্ড পর অটো নেক্সট
                 autoNextTimeout = setTimeout(loadNext, 1200);
             } else {
-                btn.classList.add('bg-red-50', 'border-red-500', 'text-red-700');
+                if(btn) btn.classList.add('bg-red-50', 'border-red-500', 'text-red-700');
                 btns[q.correct].classList.add('bg-green-50', 'border-green-500', 'text-green-700');
                 feedback.innerText = "ভুল উত্তর!";
                 feedback.className = "mt-6 p-4 rounded-xl font-bold bg-red-100 text-red-700 text-center";
                 
-                // ভুল হলে ৫ সেকেন্ড কাউন্টডাউন
                 nextBtn.classList.remove('hidden');
                 let count = 5;
                 nextBtn.innerText = `${count} সেকেন্ড পর পরবর্তী প্রশ্ন...`;
@@ -176,11 +202,10 @@
         }
 
         function handleTimeOut() {
-            checkAnswer(-1, null); // সময় শেষ হলে ভুলের লজিক কাজ করবে
+            checkAnswer(-1, null);
         }
 
         function loadNextManual() {
-            // ইউজার নিজে ক্লিক করলে সব টাইমার ক্লিয়ার হবে
             clearTimeout(autoNextTimeout);
             clearInterval(countdownInterval);
             loadNext();
