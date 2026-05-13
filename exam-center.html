@@ -5,11 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>প্রফেশনাল কুইজ মাস্টার</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap');
-        body { font-family: 'Hind Siliguri', sans-serif; background-color: #f0f2f5; }
+        body { 
+            /* ২. ফন্ট ফ্যামিলি আপডেট */
+            font-family: 'Hind Siliguri', sans-serif; 
+            background-color: #f0f2f5; 
+            -webkit-font-smoothing: antialiased;
+        }
         .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
         .progress-bar { transition: width 1s linear; }
+        
+        /* প্রশ্নের ফন্টকে আরও স্পষ্ট করার জন্য */
+        #question {
+            line-height: 1.5;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body class="p-4 md:p-10">
@@ -75,7 +87,6 @@
         let autoNextTimeout;
         let countdownInterval;
 
-        // ট্র্যাকিং সিস্টেম: কোন সাবজেক্টে কোন প্রশ্ন দেখা হয়েছে তা মনে রাখবে
         let answeredQuestions = {
             bangla: [],
             ict: [],
@@ -86,7 +97,6 @@
             const subject = document.getElementById('subject-select').value;
             let allQuestions = [];
 
-            // রেজাল্ট কার্ড বা সেটআপ এরিয়া হাইড করা
             document.getElementById('setup-area').classList.add('hidden');
             document.getElementById('result-card').classList.add('hidden');
             
@@ -95,19 +105,14 @@
                 else if (subject === 'ict') allQuestions = ictQuestions;
                 else if (subject === 'gk') allQuestions = gkQuestions;
 
-                // নতুন লজিক: আগে দেখানো হয়নি এমন প্রশ্নগুলো ফিল্টার করা
                 let newQuestions = allQuestions.filter(q => !answeredQuestions[subject].includes(q.q));
 
-                // যদি নতুন প্রশ্ন ১০টির কম থাকে, তবে মেমোরি রিসেট হবে (সব প্রশ্ন একবার দেখা শেষ হলে)
                 if (newQuestions.length < 10) {
                     answeredQuestions[subject] = [];
                     newQuestions = allQuestions;
                 }
 
-                // র‍্যান্ডম ১০টি নতুন প্রশ্ন নেওয়া
                 selectedQuestions = [...newQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
-
-                // দেখা হয়েছে এমন লিস্টে প্রশ্নগুলো যোগ করা
                 selectedQuestions.forEach(q => answeredQuestions[subject].push(q.q));
 
                 document.getElementById('quiz-area').classList.remove('hidden');
