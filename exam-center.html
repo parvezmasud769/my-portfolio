@@ -45,8 +45,7 @@
             <div class="bg-indigo-50 p-4 rounded-xl mb-4 text-left">
                 <label class="block mb-2 text-md font-semibold text-indigo-900">বিষয় পছন্দ করুন:</label>
                 <select id="subject-select" class="w-full p-3 border-2 border-indigo-100 rounded-lg text-md focus:border-indigo-500 outline-none">
-                    <option value="bangla_grammar">বাংলা ব্যাকরণ</option>
-                    <option value="bangla_literature">বাংলা সাহিত্য</option>
+                    <option value="bangla_mix">বাংলা ব্যাকরণ ও সাহিত্য</option>
                     <option value="ict">তথ্য ও যোগাযোগ প্রযুক্তি</option>
                     <option value="gk">সাধারণ জ্ঞান (GK)</option>
                 </select>
@@ -101,8 +100,8 @@
         let autoNextTimeout;
         let countdownInterval;
 
-        // হিস্টোরি ট্র্যাক করার জন্য অবজেক্ট
-        let answeredQuestions = { bangla_grammar: [], bangla_literature: [], ict: [], gk: [] };
+        // হিস্টোরি ট্র্যাক করার জন্য
+        let answeredQuestions = { bangla_mix: [], ict: [], gk: [] };
 
         function startQuiz() {
             const subject = document.getElementById('subject-select').value;
@@ -111,13 +110,20 @@
             document.getElementById('result-card').classList.add('hidden');
             
             try {
-                // সাবজেক্ট অনুযায়ী ডাটা ভ্যারিয়েবল সেট করা
-                if (subject === 'bangla_grammar') allQuestions = banglaGrammar;
-                else if (subject === 'bangla_literature') allQuestions = banglaLiterature;
-                else if (subject === 'ict') allQuestions = ictQuestions;
-                else if (subject === 'gk') allQuestions = gkQuestions;
+                // ডাটা লোড করার মূল লজিক
+                if (subject === 'bangla_mix') {
+                    // bangla_grammar.js এবং bangla_literature.js থেকে ডাটা মার্চ করা হচ্ছে
+                    allQuestions = [...banglaGrammar, ...banglaLiterature];
+                } 
+                else if (subject === 'ict') {
+                    allQuestions = ictQuestions;
+                } 
+                else if (subject === 'gk') {
+                    allQuestions = gkQuestions;
+                }
 
-                // নতুন প্রশ্ন ফিল্টার করা
+                // উত্তর না দেওয়া প্রশ্ন ফিল্টার
+                if (!answeredQuestions[subject]) answeredQuestions[subject] = [];
                 let newQuestions = allQuestions.filter(q => !answeredQuestions[subject].includes(q.q));
                 
                 if (newQuestions.length < 10) {
@@ -125,7 +131,7 @@
                     newQuestions = allQuestions;
                 }
 
-                // র‍্যান্ডম ১০টি প্রশ্ন নেওয়া
+                // ১০টি র‍্যান্ডম প্রশ্ন সিলেক্ট
                 selectedQuestions = [...newQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
                 selectedQuestions.forEach(q => answeredQuestions[subject].push(q.q));
 
@@ -136,7 +142,7 @@
                 loadQuestion();
             } catch (e) { 
                 console.error(e);
-                alert("এরর: নিশ্চিত করুন যে সব .js ফাইল এবং ভ্যারিয়েবল নাম সঠিক আছে।"); 
+                alert("ডাটা এরর! নিশ্চিত করুন banglaGrammar এবং banglaLiterature ভ্যারিয়েবল নাম সঠিক আছে।"); 
             }
         }
 
