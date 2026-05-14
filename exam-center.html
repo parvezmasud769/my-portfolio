@@ -12,12 +12,11 @@
             font-family: 'Hind Siliguri', sans-serif; 
             background-color: #f0f2f5; 
             -webkit-font-smoothing: antialiased;
-            overflow: hidden; /* পুরো বডির স্ক্রল বন্ধ */
+            overflow: hidden;
         }
         .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
         .progress-bar { transition: width 1s linear; }
         
-        /* কুইজ কার্ডটি যাতে স্ক্রিনের ভেতরেই থাকে */
         .quiz-container {
             max-height: 95vh;
             display: flex;
@@ -25,7 +24,6 @@
             justify-content: center;
         }
 
-        /* অপশন বাটনের সাইজ মোবাইলে কিছুটা ছোট করা */
         @media (max-width: 640px) {
             .option-btn {
                 padding: 0.75rem 1rem !important;
@@ -47,7 +45,8 @@
             <div class="bg-indigo-50 p-4 rounded-xl mb-4 text-left">
                 <label class="block mb-2 text-md font-semibold text-indigo-900">বিষয় পছন্দ করুন:</label>
                 <select id="subject-select" class="w-full p-3 border-2 border-indigo-100 rounded-lg text-md focus:border-indigo-500 outline-none">
-                    <option value="bangla">বাংলা সাহিত্য ও ভাষা</option>
+                    <option value="bangla_grammar">বাংলা ব্যাকরণ</option>
+                    <option value="bangla_literature">বাংলা সাহিত্য</option>
                     <option value="ict">তথ্য ও যোগাযোগ প্রযুক্তি</option>
                     <option value="gk">সাধারণ জ্ঞান (GK)</option>
                 </select>
@@ -88,7 +87,8 @@
         </div>
     </div>
 
-    <script src="bangla.js"></script>
+    <script src="bangla_grammar.js"></script>
+    <script src="bangla_literature.js"></script>
     <script src="ict.js"></script>
     <script src="gk.js"></script>
 
@@ -101,7 +101,8 @@
         let autoNextTimeout;
         let countdownInterval;
 
-        let answeredQuestions = { bangla: [], ict: [], gk: [] };
+        // হিস্টোরি ট্র্যাক করার জন্য অবজেক্ট
+        let answeredQuestions = { bangla_grammar: [], bangla_literature: [], ict: [], gk: [] };
 
         function startQuiz() {
             const subject = document.getElementById('subject-select').value;
@@ -110,24 +111,33 @@
             document.getElementById('result-card').classList.add('hidden');
             
             try {
-                if (subject === 'bangla') allQuestions = banglaQuestions;
+                // সাবজেক্ট অনুযায়ী ডাটা ভ্যারিয়েবল সেট করা
+                if (subject === 'bangla_grammar') allQuestions = banglaGrammar;
+                else if (subject === 'bangla_literature') allQuestions = banglaLiterature;
                 else if (subject === 'ict') allQuestions = ictQuestions;
                 else if (subject === 'gk') allQuestions = gkQuestions;
 
+                // নতুন প্রশ্ন ফিল্টার করা
                 let newQuestions = allQuestions.filter(q => !answeredQuestions[subject].includes(q.q));
+                
                 if (newQuestions.length < 10) {
                     answeredQuestions[subject] = [];
                     newQuestions = allQuestions;
                 }
 
+                // র‍্যান্ডম ১০টি প্রশ্ন নেওয়া
                 selectedQuestions = [...newQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
                 selectedQuestions.forEach(q => answeredQuestions[subject].push(q.q));
 
                 document.getElementById('quiz-area').classList.remove('hidden');
-                index = 0; score = 0;
+                index = 0; 
+                score = 0;
                 document.getElementById('score').innerText = score;
                 loadQuestion();
-            } catch (e) { alert("ডেটা লোড এরর!"); }
+            } catch (e) { 
+                console.error(e);
+                alert("এরর: নিশ্চিত করুন যে সব .js ফাইল এবং ভ্যারিয়েবল নাম সঠিক আছে।"); 
+            }
         }
 
         function loadQuestion() {
@@ -179,7 +189,7 @@
             if (selected === q.correct) {
                 score++;
                 document.getElementById('score').innerText = score;
-                btn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                if(btn) btn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
                 feedback.innerText = "সঠিক উত্তর!";
                 feedback.className = "mt-3 p-2 rounded-lg font-bold bg-green-50 text-green-700 text-center text-xs";
                 autoNextTimeout = setTimeout(loadNext, 1000);
@@ -201,6 +211,7 @@
 
         function handleTimeOut() { checkAnswer(-1, null); }
         function loadNextManual() { clearTimeout(autoNextTimeout); clearInterval(countdownInterval); loadNext(); }
+        
         function loadNext() {
             index++;
             if (index < selectedQuestions.length) loadQuestion();
