@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tech Leaders Quiz Center</title>
+    <title>Masud's Quiz Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         body { 
@@ -38,14 +39,14 @@
 <body class="flex items-center justify-center min-h-screen p-2 md:p-6">
 
     <div class="quiz-container w-full max-w-xl mx-auto bg-white p-5 md:p-8 rounded-2xl shadow-2xl text-center relative">
-        <h1 class="text-2xl font-bold mb-1 text-indigo-600"> মাসুদ'স কুইজ সেন্টার</h1>
+        <h1 class="text-2xl font-bold mb-1 text-indigo-600">মাসুদ'স কুইজ সেন্টার</h1>
         <p class="text-xs text-gray-400 mb-4 border-b pb-2">নিজেকে যাচাই করুন ও জবের জন্য প্রস্তুত করুন</p>
 
         <div id="setup-area">
             <div class="bg-indigo-50 p-4 rounded-xl mb-4 text-left">
                 <label class="block mb-2 text-md font-semibold text-indigo-900">বিষয় পছন্দ করুন:</label>
                 <select id="subject-select" class="w-full p-3 border-2 border-indigo-100 rounded-lg text-md focus:border-indigo-500 outline-none">
-                    <option value="bangla_mix">বাংলা ব্যাকরণ ও সাহিত্য</option>
+                    <option value="bangla">বাংলা ব্যাকরণ ও সাহিত্য</option>
                     <option value="ict">তথ্য ও যোগাযোগ প্রযুক্তি</option>
                     <option value="gk">সাধারণ জ্ঞান (GK)</option>
                 </select>
@@ -92,6 +93,11 @@
     <script src="gk.js"></script>
 
     <script>
+        // ১. সুপাবেস কানেকশন
+        const supabaseUrl = 'https://vsvumbpvogwzvypzxjhf.supabase.co';
+        const supabaseKey = 'sb_publishable_Uaz6Zkbvl-npCooRx6jJzA_x97KEVTX';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
         let selectedQuestions = [];
         let index = 0;
         let score = 0;
@@ -100,49 +106,51 @@
         let autoNextTimeout;
         let countdownInterval;
 
-        // হিস্টোরি ট্র্যাক করার জন্য
-        let answeredQuestions = { bangla_mix: [], ict: [], gk: [] };
-
-        function startQuiz() {
+        async function startQuiz() {
             const subject = document.getElementById('subject-select').value;
-            let allQuestions = [];
             document.getElementById('setup-area').classList.add('hidden');
             document.getElementById('result-card').classList.add('hidden');
-            
+            document.getElementById('quiz-area').classList.remove('hidden');
+            document.getElementById('question').innerText = "প্রশ্ন লোড হচ্ছে...";
+
+            let fileQuestions = [];
+            let dbQuestions = [];
+
+            // ২. লোকাল ফাইল থেকে প্রশ্ন নেয়া
             try {
-                // ডাটা লোড করার মূল লজিক
-                if (subject === 'bangla_mix') {
-                    // bangla_grammar.js এবং bangla_literature.js থেকে ডাটা মার্চ করা হচ্ছে
-                    allQuestions = [...banglaGrammar, ...banglaLiterature];
-                } 
-                else if (subject === 'ict') {
-                    allQuestions = ictQuestions;
-                } 
-                else if (subject === 'gk') {
-                    allQuestions = gkQuestions;
+                if (subject === 'bangla') {
+                    fileQuestions = [...(typeof banglaGrammar !== 'undefined' ? banglaGrammar : []), 
+                                     ...(typeof banglaLiterature !== 'undefined' ? banglaLiterature : [])];
+                } else if (subject === 'ict') {
+                    fileQuestions = typeof ictQuestions !== 'undefined' ? ictQuestions : [];
+                } else if (subject === 'gk') {
+                    fileQuestions = typeof gkQuestions !== 'undefined' ? gkQuestions : [];
                 }
+            } catch (e) { console.warn("ফাইল লোড এরর:", e); }
 
-                // উত্তর না দেওয়া প্রশ্ন ফিল্টার
-                if (!answeredQuestions[subject]) answeredQuestions[subject] = [];
-                let newQuestions = allQuestions.filter(q => !answeredQuestions[subject].includes(q.q));
-                
-                if (newQuestions.length < 10) {
-                    answeredQuestions[subject] = [];
-                    newQuestions = allQuestions;
-                }
+            // ৩. সুপাবেস ডাটাবেস থেকে নতুন প্রশ্ন আনা
+            try {
+                const { data, error } = await supabase
+                    .from('quiz_questions')
+                    .select('*')
+                    .eq('subject', subject);
 
+                if (!error && data) dbQuestions = data;
+            } catch (e) { console.error("ডাটাবেস কানেকশন এরর:", e); }
+
+            // ৪. সব প্রশ্ন একসাথে করা (Merge)
+            const allQuestions = [...fileQuestions, ...dbQuestions];
+
+            if (allQuestions.length > 0) {
                 // ১০টি র‍্যান্ডম প্রশ্ন সিলেক্ট
-                selectedQuestions = [...newQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
-                selectedQuestions.forEach(q => answeredQuestions[subject].push(q.q));
-
-                document.getElementById('quiz-area').classList.remove('hidden');
+                selectedQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 10);
                 index = 0; 
                 score = 0;
                 document.getElementById('score').innerText = score;
                 loadQuestion();
-            } catch (e) { 
-                console.error(e);
-                alert("ডাটা এরর! নিশ্চিত করুন banglaGrammar এবং banglaLiterature ভ্যারিয়েবল নাম সঠিক আছে।"); 
+            } else {
+                alert("দুঃখিত, কোনো প্রশ্ন পাওয়া যায়নি!");
+                location.reload();
             }
         }
 
@@ -158,7 +166,10 @@
             feedback.classList.add('hidden');
             nextBtn.classList.add('hidden');
 
-            q.options.forEach((opt, i) => {
+            // অপশনগুলো সাজানো (ফাইল বা ডাটাবেস দুই জায়গার ফরম্যাট হ্যান্ডেল করার জন্য)
+            let currentOptions = Array.isArray(q.options) ? q.options : JSON.parse(q.options || "[]");
+
+            currentOptions.forEach((opt, i) => {
                 const btn = document.createElement('button');
                 btn.className = "option-btn w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-indigo-50 transition font-medium text-gray-700";
                 btn.innerText = opt;
@@ -192,7 +203,8 @@
             btns.forEach(b => b.disabled = true);
             feedback.classList.remove('hidden');
 
-            if (selected === q.correct) {
+            // সঠিক উত্তর চেক (String বা Number যাই হোক)
+            if (parseInt(selected) === parseInt(q.correct)) {
                 score++;
                 document.getElementById('score').innerText = score;
                 if(btn) btn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
@@ -201,10 +213,11 @@
                 autoNextTimeout = setTimeout(loadNext, 1000);
             } else {
                 if(btn) btn.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
-                btns[q.correct].classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                if(btns[q.correct]) btns[q.correct].classList.add('bg-green-100', 'border-green-500', 'text-green-800');
                 feedback.innerText = "ভুল উত্তর!";
                 feedback.className = "mt-3 p-2 rounded-lg font-bold bg-red-50 text-red-700 text-center text-xs";
                 nextBtn.classList.remove('hidden');
+                
                 let count = 4;
                 nextBtn.innerText = `${count}s পর পরবর্তী প্রশ্ন`;
                 countdownInterval = setInterval(() => {
@@ -225,6 +238,7 @@
         }
 
         function showResult() {
+            clearInterval(timerInterval);
             document.getElementById('quiz-area').classList.add('hidden');
             document.getElementById('result-card').classList.remove('hidden');
             const subject = document.getElementById('subject-select').value;
