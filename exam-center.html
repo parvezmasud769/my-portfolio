@@ -13,13 +13,13 @@
             font-family: 'Hind Siliguri', sans-serif; 
             background-color: #f0f2f5; 
             -webkit-font-smoothing: antialiased;
-            overflow: hidden;
+            overflow-x: hidden;
         }
         .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
         .progress-bar { transition: width 1s linear; }
         
         .quiz-container {
-            max-height: 95vh;
+            min-height: 400px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -74,7 +74,7 @@
         </div>
         
         <div id="result-card" class="hidden">
-            <div class="py-4">
+            <div class="py-4 text-center">
                 <div class="text-4xl mb-2">🎉</div>
                 <h2 class="text-xl font-bold mb-1 text-gray-800">কুইজ সম্পন্ন!</h2>
                 <div class="bg-gray-50 p-4 rounded-xl my-4 border border-dashed border-indigo-200">
@@ -93,10 +93,12 @@
     <script src="gk.js"></script>
 
     <script>
-        // ১. সুপাবেস কানেকশন
+        // ১. সুপাবেস কানেকশন সেটআপ (কনসোল এরর ফিক্স করা হয়েছে)
         const supabaseUrl = 'https://vsvumbpvogwzvypzxjhf.supabase.co';
         const supabaseKey = 'sb_publishable_Uaz6Zkbvl-npCooRx6jJzA_x97KEVTX';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // ভ্যারিয়েবল নাম 'supabase' থেকে বদলে 'sbClient' করা হয়েছে যাতে লাইব্রেরির সাথে কনফ্লিক্ট না হয়
+        const sbClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         let selectedQuestions = [];
         let index = 0;
@@ -108,6 +110,8 @@
 
         async function startQuiz() {
             const subject = document.getElementById('subject-select').value;
+            
+            // UI রিসেট
             document.getElementById('setup-area').classList.add('hidden');
             document.getElementById('result-card').classList.add('hidden');
             document.getElementById('quiz-area').classList.remove('hidden');
@@ -116,40 +120,50 @@
             let fileQuestions = [];
             let dbQuestions = [];
 
-            // ২. লোকাল ফাইল থেকে প্রশ্ন নেয়া
+            // ২. লোকাল ফাইল থেকে ডাটা লোড
             try {
                 if (subject === 'bangla') {
-                    fileQuestions = [...(typeof banglaGrammar !== 'undefined' ? banglaGrammar : []), 
-                                     ...(typeof banglaLiterature !== 'undefined' ? banglaLiterature : [])];
+                    fileQuestions = [
+                        ...(typeof banglaGrammar !== 'undefined' ? banglaGrammar : []), 
+                        ...(typeof banglaLiterature !== 'undefined' ? banglaLiterature : [])
+                    ];
                 } else if (subject === 'ict') {
                     fileQuestions = typeof ictQuestions !== 'undefined' ? ictQuestions : [];
                 } else if (subject === 'gk') {
                     fileQuestions = typeof gkQuestions !== 'undefined' ? gkQuestions : [];
                 }
-            } catch (e) { console.warn("ফাইল লোড এরর:", e); }
+            } catch (e) { 
+                console.warn("ফাইল থেকে প্রশ্ন লোড করা যায়নি:", e); 
+            }
 
-            // ৩. সুপাবেস ডাটাবেস থেকে নতুন প্রশ্ন আনা
+            // ৩. সুপাবেস থেকে ডাটা লোড
             try {
-                const { data, error } = await supabase
+                const { data, error } = await sbClient
                     .from('quiz_questions')
                     .select('*')
                     .eq('subject', subject);
 
-                if (!error && data) dbQuestions = data;
-            } catch (e) { console.error("ডাটাবেস কানেকশন এরর:", e); }
+                if (!error && data) {
+                    dbQuestions = data;
+                } else if (error) {
+                    console.error("Supabase Error:", error.message);
+                }
+            } catch (e) { 
+                console.error("Database connection error:", e); 
+            }
 
-            // ৪. সব প্রশ্ন একসাথে করা (Merge)
+            // ৪. ফাইল এবং ডাটাবেস মার্চ করা
             const allQuestions = [...fileQuestions, ...dbQuestions];
 
             if (allQuestions.length > 0) {
-                // ১০টি র‍্যান্ডম প্রশ্ন সিলেক্ট
+                // র‍্যান্ডম ১০টি প্রশ্ন সিলেক্ট
                 selectedQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 10);
                 index = 0; 
                 score = 0;
                 document.getElementById('score').innerText = score;
                 loadQuestion();
             } else {
-                alert("দুঃখিত, কোনো প্রশ্ন পাওয়া যায়নি!");
+                alert("দুঃখিত, কোনো প্রশ্ন পাওয়া যায়নি! আপনার ফাইল পাথ বা ডাটাবেস চেক করুন।");
                 location.reload();
             }
         }
@@ -158,6 +172,7 @@
             const q = selectedQuestions[index];
             document.getElementById('q-count').innerText = index + 1;
             document.getElementById('question').innerText = q.q;
+            
             const optionsDiv = document.getElementById('options');
             const feedback = document.getElementById('feedback');
             const nextBtn = document.getElementById('next-btn');
@@ -166,10 +181,10 @@
             feedback.classList.add('hidden');
             nextBtn.classList.add('hidden');
 
-            // অপশনগুলো সাজানো (ফাইল বা ডাটাবেস দুই জায়গার ফরম্যাট হ্যান্ডেল করার জন্য)
-            let currentOptions = Array.isArray(q.options) ? q.options : JSON.parse(q.options || "[]");
+            // অপশন ডাটা হ্যান্ডেলিং (Array অথবা JSON String)
+            let opts = Array.isArray(q.options) ? q.options : JSON.parse(q.options || "[]");
 
-            currentOptions.forEach((opt, i) => {
+            opts.forEach((opt, i) => {
                 const btn = document.createElement('button');
                 btn.className = "option-btn w-full text-left p-3 border border-gray-200 rounded-xl hover:bg-indigo-50 transition font-medium text-gray-700";
                 btn.innerText = opt;
@@ -203,7 +218,6 @@
             btns.forEach(b => b.disabled = true);
             feedback.classList.remove('hidden');
 
-            // সঠিক উত্তর চেক (String বা Number যাই হোক)
             if (parseInt(selected) === parseInt(q.correct)) {
                 score++;
                 document.getElementById('score').innerText = score;
